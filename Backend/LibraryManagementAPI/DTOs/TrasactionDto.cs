@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace LibraryManagementAPI.DTOs
 {
     public class TransactionDto
@@ -16,8 +18,12 @@ namespace LibraryManagementAPI.DTOs
 
     public class IssueBookDto
     {
+        [Required]
         public int BookId { get; set; }
+        [Required]
         public int MemberId { get; set; }
+        [Required]
+        [Range(1, 365)]
         public int DaysToReturn { get; set; }
     }
 
