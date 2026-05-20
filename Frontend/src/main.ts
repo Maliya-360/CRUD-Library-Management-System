@@ -5,16 +5,12 @@ import { RegisterComponent } from './app/pages/register/register.component';
 import { DashboardComponent } from './app/pages/dashboard/dashboard.component';
 import './styles.css';
 
-// Initialize services
 const toastService = new ToastService();
 const authService = new AuthService(toastService);
-
-// Initialize components
 const loginComponent = new LoginComponent(authService, toastService);
 const registerComponent = new RegisterComponent(authService, toastService);
 const dashboardComponent = new DashboardComponent(authService, toastService);
 
-// Global functions
 (window as any).navigateTo = (page: string) => {
   const app = document.getElementById('app');
   if (!app) return;
@@ -105,7 +101,6 @@ function attachRegisterListeners(): void {
   }
 }
 
-// Initialize app on load
 document.addEventListener('DOMContentLoaded', () => {
   window.navigateTo('login');
 });
