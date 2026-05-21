@@ -151,6 +151,77 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
   app.innerHTML = adminDashboardComponent.render();
 };
 
+(window as any).openAdminEditMember = function(memberId: number) {
+  (adminDashboardComponent as any).openEditMember(memberId);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminEditMemberField = function(field: string, value: string) {
+  (adminDashboardComponent as any).updateEditMemberField(field, value);
+};
+
+(window as any).submitAdminEditMember = async function() {
+  await (adminDashboardComponent as any).submitEditMember();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).closeAdminEditMember = function() {
+  (adminDashboardComponent as any).closeEditMember();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).openAdminEditBook = function(bookId: number) {
+  (adminDashboardComponent as any).openEditBook(bookId);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminEditBookField = function(field: string, value: string) {
+  (adminDashboardComponent as any).updateEditBookField(field, value);
+};
+
+(window as any).submitAdminEditBook = async function() {
+  await (adminDashboardComponent as any).submitEditBook();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).closeAdminEditBook = function() {
+  (adminDashboardComponent as any).closeEditBook();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).openAdminDeleteBook = function(bookId: number) {
+  (adminDashboardComponent as any).openDeleteBook(bookId);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).confirmAdminDeleteBook = async function() {
+  await (adminDashboardComponent as any).confirmDeleteBook();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).closeAdminDeleteBook = function() {
+  (adminDashboardComponent as any).closeDeleteBook();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
 (window as any).logoutAdmin = function() {
   authService.logout();
   toastService.success('Logged out successfully!');

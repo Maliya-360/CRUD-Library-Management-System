@@ -199,6 +199,23 @@ export class AuthService {
     }
   }
 
+  async updateMember(memberId: number, data: any): Promise<any> {
+    try {
+      const response = await this.api.put(`/members/${memberId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to update member');
+    }
+  }
+
+  async deleteMember(memberId: number): Promise<void> {
+    try {
+      await this.api.delete(`/members/${memberId}`);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to delete member');
+    }
+  }
+
   async changePassword(memberId: number, currentPassword: string, newPassword: string): Promise<any> {
     try {
       const response = await this.api.post(`/members/${memberId}/change-password`, {
@@ -263,6 +280,23 @@ export class AuthService {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to create book');
+    }
+  }
+
+  async updateBook(bookId: number, data: any): Promise<BookRecord> {
+    try {
+      const response = await this.api.put<BookRecord>(`/books/${bookId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to update book');
+    }
+  }
+
+  async deleteBook(bookId: number): Promise<void> {
+    try {
+      await this.api.delete(`/books/${bookId}`);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to delete book');
     }
   }
 

@@ -35,6 +35,12 @@ export class AdminDashboardComponent {
     totalQuantity: 1,
     category: ''
   };
+  private editMemberModalOpen = false;
+  private editMemberForm: any = null;
+  private editBookModalOpen = false;
+  private editBookForm: any = null;
+  private deleteBookConfirmOpen = false;
+  private deleteBookTargetId: number | null = null;
 
   constructor(authService: AuthService, toastService: ToastService) {
     this.authService = authService;
@@ -177,6 +183,121 @@ export class AdminDashboardComponent {
     } catch (error: any) {
       this.toastService.error(error.message || 'Failed to create book');
     }
+  }
+
+  openEditMember(memberId: number): void {
+    const member = this.members.find(m => m.memberId === memberId);
+    if (!member) return;
+    this.editMemberForm = { ...member };
+    this.editMemberModalOpen = true;
+  }
+
+  updateEditMemberField(field: string, value: string): void {
+    if (!this.editMemberForm) return;
+    if (field === 'isActive') {
+      this.editMemberForm.isActive = value === 'true' || value === '1' || value === 'on';
+    } else {
+      this.editMemberForm[field] = value;
+    }
+  }
+
+  async submitEditMember(): Promise<void> {
+    if (!this.editMemberForm) return;
+    try {
+      const id = this.editMemberForm.memberId;
+      const payload = {
+        FirstName: this.editMemberForm.firstName,
+        LastName: this.editMemberForm.lastName,
+        Email: this.editMemberForm.email,
+        Phone: this.editMemberForm.phone,
+        IsActive: this.editMemberForm.isActive
+      };
+      await this.authService.updateMember(id, payload);
+      this.toastService.success('Member updated');
+      const members = await this.authService.getAllMembers();
+      this.members = members.filter(member => member.memberType === 'Member');
+      this.totalUsers = this.members.length;
+      this.editMemberModalOpen = false;
+      this.editMemberForm = null;
+    } catch (error: any) {
+      this.toastService.error(error.message || 'Failed to update member');
+    }
+  }
+
+  closeEditMember(): void {
+    this.editMemberModalOpen = false;
+    this.editMemberForm = null;
+  }
+
+  openEditBook(bookId: number): void {
+    const book = this.books.find(b => b.bookId === bookId);
+    if (!book) return;
+    this.editBookForm = { ...book };
+    this.editBookModalOpen = true;
+  }
+
+  updateEditBookField(field: string, value: string): void {
+    if (!this.editBookForm) return;
+    if (field === 'totalQuantity') {
+      this.editBookForm.totalQuantity = parseInt(value || '0', 10);
+    } else {
+      this.editBookForm[field] = value;
+    }
+  }
+
+  async submitEditBook(): Promise<void> {
+    if (!this.editBookForm) return;
+    try {
+      const id = this.editBookForm.bookId;
+      const payload = {
+        title: this.editBookForm.title,
+        author: this.editBookForm.author,
+        isbn: this.editBookForm.isbn,
+        publicationDate: this.editBookForm.publicationDate,
+        availableQuantity: this.editBookForm.availableQuantity,
+        totalQuantity: this.editBookForm.totalQuantity,
+        category: this.editBookForm.category
+      };
+      await this.authService.updateBook(id, payload);
+      this.toastService.success('Book updated');
+      const books = await this.authService.getAllBooks();
+      this.books = books;
+      this.totalBooks = this.books.length;
+      this.editBookModalOpen = false;
+      this.editBookForm = null;
+    } catch (error: any) {
+      this.toastService.error(error.message || 'Failed to update book');
+    }
+  }
+
+  closeEditBook(): void {
+    this.editBookModalOpen = false;
+    this.editBookForm = null;
+  }
+
+  openDeleteBook(bookId: number): void {
+    this.deleteBookConfirmOpen = true;
+    this.deleteBookTargetId = bookId;
+  }
+
+  async confirmDeleteBook(): Promise<void> {
+    if (!this.deleteBookTargetId) return;
+    try {
+      await this.authService.deleteBook(this.deleteBookTargetId);
+      this.toastService.success('Book deleted');
+      const books = await this.authService.getAllBooks();
+      this.books = books;
+      this.totalBooks = this.books.length;
+    } catch (error: any) {
+      this.toastService.error(error.message || 'Failed to delete book');
+    }
+    this.deleteBookConfirmOpen = false;
+    this.deleteBookTargetId = null;
+  }
+
+  closeDeleteBook(): void {
+    this.deleteBookConfirmOpen = false;
+    this.deleteBookTargetId = null;
   }
 
   private getFilteredMembers(): any[] {
@@ -355,6 +476,9 @@ export class AdminDashboardComponent {
                         <div class="member-meta">
                           <span class="member-type">${member.memberType}</span>
                           <span class="member-status ${member.isActive ? 'active' : 'inactive'}">${member.isActive ? 'Active' : 'Inactive'}</span>
+                          <div class="member-actions">
+                            <button class="action-icon" title="Edit member" aria-label="Edit member" onclick="window.openAdminEditMember(${member.memberId})">✎</button>
+                          </div>
                         </div>
                       </div>
                     `).join('') : '<div class="empty-state">No members match your search.</div>'}
@@ -414,6 +538,10 @@ export class AdminDashboardComponent {
                         <div class="member-meta">
                           <span class="member-status ${book.isAvailable ? 'active' : 'inactive'}">${book.isAvailable ? 'Available' : 'Unavailable'}</span>
                           <small>Qty: ${book.availableQuantity}/${book.totalQuantity}</small>
+                          <div class="member-actions">
+                            <button class="action-icon" title="Edit book" aria-label="Edit book" onclick="window.openAdminEditBook(${book.bookId})">✎</button>
+                            <button class="action-icon danger" title="Delete book" aria-label="Delete book" onclick="window.openAdminDeleteBook(${book.bookId})">🗑</button>
+                          </div>
                         </div>
                       </div>
                     `).join('') : '<div class="empty-state">No books match your search.</div>'}
@@ -499,6 +627,109 @@ export class AdminDashboardComponent {
           <!-- Admin Content -->
           <div class="admin-content">
             ${sectionHtml}
+
+            ${this.editMemberModalOpen && this.editMemberForm ? `
+              <div class="modal-overlay">
+                <div class="modal">
+                  <div class="modal-header">
+                    <div>
+                      <span class="modal-kicker">Update user</span>
+                      <h3>Edit Member</h3>
+                    </div>
+                    <button class="modal-close" aria-label="Close member editor" onclick="window.closeAdminEditMember()">✕</button>
+                  </div>
+                  <div class="modal-grid">
+                    <label>
+                      First name
+                      <input type="text" value="${this.editMemberForm.firstName}" oninput="window.updateAdminEditMemberField('firstName', this.value)" placeholder="First name">
+                    </label>
+                    <label>
+                      Last name
+                      <input type="text" value="${this.editMemberForm.lastName}" oninput="window.updateAdminEditMemberField('lastName', this.value)" placeholder="Last name">
+                    </label>
+                    <label class="modal-span-2">
+                      Email
+                      <input type="email" value="${this.editMemberForm.email}" oninput="window.updateAdminEditMemberField('email', this.value)" placeholder="Email">
+                    </label>
+                    <label>
+                      Phone
+                      <input type="text" value="${this.editMemberForm.phone}" oninput="window.updateAdminEditMemberField('phone', this.value)" placeholder="Phone">
+                    </label>
+                    <label>
+                      Active
+                      <select onchange="window.updateAdminEditMemberField('isActive', this.value)"><option value="true" ${this.editMemberForm.isActive ? 'selected' : ''}>Yes</option><option value="false" ${!this.editMemberForm.isActive ? 'selected' : ''}>No</option></select>
+                    </label>
+                  </div>
+                  <div class="modal-actions">
+                    <button class="modal-primary" onclick="window.submitAdminEditMember()">Save changes</button>
+                    <button class="modal-secondary" onclick="window.closeAdminEditMember()">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+
+            ${this.editBookModalOpen && this.editBookForm ? `
+              <div class="modal-overlay">
+                <div class="modal">
+                  <div class="modal-header">
+                    <div>
+                      <span class="modal-kicker">Update book</span>
+                      <h3>Edit Book</h3>
+                    </div>
+                    <button class="modal-close" aria-label="Close book editor" onclick="window.closeAdminEditBook()">✕</button>
+                  </div>
+                  <div class="modal-grid">
+                    <label class="modal-span-2">
+                      Title
+                      <input type="text" value="${this.editBookForm.title}" oninput="window.updateAdminEditBookField('title', this.value)" placeholder="Title">
+                    </label>
+                    <label class="modal-span-2">
+                      Author
+                      <input type="text" value="${this.editBookForm.author}" oninput="window.updateAdminEditBookField('author', this.value)" placeholder="Author">
+                    </label>
+                    <label class="modal-span-2">
+                      ISBN
+                      <input type="text" value="${this.editBookForm.isbn}" oninput="window.updateAdminEditBookField('isbn', this.value)" placeholder="ISBN">
+                    </label>
+                    <label>
+                      Publication date
+                      <input type="date" value="${this.editBookForm.publicationDate ? this.editBookForm.publicationDate.split('T')[0] : ''}" oninput="window.updateAdminEditBookField('publicationDate', this.value)" placeholder="Publication Date">
+                    </label>
+                    <label>
+                      Total quantity
+                      <input type="number" value="${this.editBookForm.totalQuantity}" min="1" oninput="window.updateAdminEditBookField('totalQuantity', this.value)" placeholder="Total Quantity">
+                    </label>
+                    <label class="modal-span-2">
+                      Category
+                      <input type="text" value="${this.editBookForm.category}" oninput="window.updateAdminEditBookField('category', this.value)" placeholder="Category">
+                    </label>
+                  </div>
+                  <div class="modal-actions">
+                    <button class="modal-primary" onclick="window.submitAdminEditBook()">Save changes</button>
+                    <button class="modal-secondary" onclick="window.closeAdminEditBook()">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+
+            ${this.deleteBookConfirmOpen && this.deleteBookTargetId ? `
+              <div class="modal-overlay">
+                <div class="modal">
+                  <div class="modal-header">
+                    <div>
+                      <span class="modal-kicker danger">Danger zone</span>
+                      <h3>Delete Book</h3>
+                    </div>
+                    <button class="modal-close" aria-label="Close delete confirmation" onclick="window.closeAdminDeleteBook()">✕</button>
+                  </div>
+                  <p class="modal-copy">Are you sure you want to delete this book? This action cannot be undone.</p>
+                  <div class="modal-actions">
+                    <button class="modal-danger" onclick="window.confirmAdminDeleteBook()">Delete book</button>
+                    <button class="modal-secondary" onclick="window.closeAdminDeleteBook()">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
           </div>
         </main>
       </div>
