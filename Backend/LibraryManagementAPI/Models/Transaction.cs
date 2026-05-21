@@ -32,6 +32,8 @@ namespace LibraryManagementAPI.Models
 
         public decimal Fine { get; set; }
 
+        public bool IsDamaged { get; set; }
+
         public DateTime CreatedDate { get; set; }
 
         public Book Book { get; set; }

@@ -523,6 +523,22 @@
   gap: 12px;
 }
 
+.transaction-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.transaction-toggle input {
+  width: auto;
+  margin: 0;
+}
+
+.transaction-subheader {
+  margin-top: 18px;
+}
+
 .register-btn {
   background: var(--primary);
   color: var(--white);

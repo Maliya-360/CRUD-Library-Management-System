@@ -1,4 +1,4 @@
-import { AuthService } from '../../services/auth.service';
+import { AuthService, TransactionRecord } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 
 export class AdminDashboardComponent {
@@ -6,15 +6,19 @@ export class AdminDashboardComponent {
   private toastService: ToastService;
   private sidebarOpen: boolean = false;
   private currentUser: any = null;
-  private currentSection: 'dashboard' | 'users' = 'dashboard';
+  private currentSection: 'dashboard' | 'users' | 'books' | 'reservations' | 'transactions' = 'dashboard';
   private members: any[] = [];
   private books: any[] = [];
+  private transactions: TransactionRecord[] = [];
   private memberSearch = '';
   private memberFilter = 'all';
   private memberPage = 1;
   private bookSearch = '';
   private bookFilter = 'all';
   private bookPage = 1;
+  private transactionSearch = '';
+  private transactionFilter = 'all';
+  private transactionPage = 1;
   private readonly pageSize = 4;
   private totalUsers = 0;
   private totalBooks = 0;
@@ -34,6 +38,15 @@ export class AdminDashboardComponent {
     publicationDate: '',
     totalQuantity: 1,
     category: ''
+  };
+  private issueTransactionForm = {
+    bookId: '',
+    memberId: '',
+    daysToReturn: 14
+  };
+  private returnTransactionForm = {
+    transactionId: '',
+    isDamaged: false
   };
   private editMemberModalOpen = false;
   private editMemberForm: any = null;
@@ -70,6 +83,7 @@ export class AdminDashboardComponent {
       this.totalTransactions = transactions.length;
       this.totalReservations = reservations.length;
       this.books = books;
+      this.transactions = transactions;
     } catch (error: any) {
       this.totalUsers = 0;
       this.totalBooks = 0;
@@ -81,11 +95,14 @@ export class AdminDashboardComponent {
     return true;
   }
 
-  setSection(section: 'dashboard' | 'users' | 'books'): void {
+  setSection(section: 'dashboard' | 'users' | 'books' | 'transactions'): void {
     this.currentSection = section;
     this.memberPage = 1;
     if (section === 'books') {
       this.bookPage = 1;
+    }
+    if (section === 'transactions') {
+      this.transactionPage = 1;
     }
   }
 
@@ -107,6 +124,16 @@ export class AdminDashboardComponent {
   updateBookFilter(value: string): void {
     this.bookFilter = value;
     this.bookPage = 1;
+  }
+
+  updateTransactionSearch(value: string): void {
+    this.transactionSearch = value;
+    this.transactionPage = 1;
+  }
+
+  updateTransactionFilter(value: string): void {
+    this.transactionFilter = value;
+    this.transactionPage = 1;
   }
 
   nextMemberPage(): void {
@@ -134,6 +161,21 @@ export class AdminDashboardComponent {
     this.registerBookForm = {
       ...this.registerBookForm,
       [field]: parsed as any
+    };
+  }
+
+  updateIssueTransactionField(field: keyof typeof this.issueTransactionForm, value: string): void {
+    const parsed = field === 'daysToReturn' ? parseInt(value || '0', 10) : value;
+    this.issueTransactionForm = {
+      ...this.issueTransactionForm,
+      [field]: parsed as any
+    };
+  }
+
+  updateReturnTransactionField(field: keyof typeof this.returnTransactionForm, value: string | boolean): void {
+    this.returnTransactionForm = {
+      ...this.returnTransactionForm,
+      [field]: field === 'isDamaged' ? Boolean(value === true || value === 'true' || value === 'on') : value as any
     };
   }
 
@@ -183,6 +225,83 @@ export class AdminDashboardComponent {
     } catch (error: any) {
       this.toastService.error(error.message || 'Failed to create book');
     }
+  }
+
+  async refreshTransactionData(): Promise<void> {
+    const [books, transactions] = await Promise.all([
+      this.authService.getAllBooks(),
+      this.authService.getAllTransactions()
+    ]);
+
+    this.books = books;
+    this.transactions = transactions;
+    this.totalBooks = this.books.length;
+    this.totalTransactions = this.transactions.length;
+  }
+
+  async submitIssueTransaction(): Promise<void> {
+    const bookId = parseInt(this.issueTransactionForm.bookId, 10);
+    const memberId = parseInt(this.issueTransactionForm.memberId, 10);
+    const daysToReturn = this.issueTransactionForm.daysToReturn;
+
+    if (!bookId || !memberId || !daysToReturn) {
+      this.toastService.error('Please fill in all transaction fields');
+      return;
+    }
+
+    try {
+      await this.authService.issueTransaction({ bookId, memberId, daysToReturn });
+      this.toastService.success('Transaction created successfully');
+      this.issueTransactionForm = {
+        bookId: '',
+        memberId: '',
+        daysToReturn: 14
+      };
+      await this.refreshTransactionData();
+      this.currentSection = 'transactions';
+    } catch (error: any) {
+      this.toastService.error(error.message || 'Failed to create transaction');
+    }
+  }
+
+  openReturnTransaction(transactionId: number): void {
+    this.returnTransactionForm = {
+      transactionId: String(transactionId),
+      isDamaged: false
+    };
+    this.currentSection = 'transactions';
+  }
+
+  async submitReturnTransaction(): Promise<void> {
+    const transactionId = parseInt(this.returnTransactionForm.transactionId, 10);
+
+    if (!transactionId) {
+      this.toastService.error('Please select a transaction to return');
+      return;
+    }
+
+    try {
+      await this.authService.returnTransaction({
+        transactionId,
+        isDamaged: this.returnTransactionForm.isDamaged
+      });
+      this.toastService.success('Book returned successfully');
+      this.returnTransactionForm = {
+        transactionId: '',
+        isDamaged: false
+      };
+      await this.refreshTransactionData();
+      this.currentSection = 'transactions';
+    } catch (error: any) {
+      this.toastService.error(error.message || 'Failed to return book');
+    }
+  }
+
+  closeReturnTransaction(): void {
+    this.returnTransactionForm = {
+      transactionId: '',
+      isDamaged: false
+    };
   }
 
   openEditMember(memberId: number): void {
@@ -334,6 +453,27 @@ export class AdminDashboardComponent {
     });
   }
 
+  private getFilteredTransactions(): TransactionRecord[] {
+    const search = this.transactionSearch.trim().toLowerCase();
+
+    return this.transactions.filter(transaction => {
+      const matchesSearch = !search || [
+        transaction.transactionId,
+        transaction.bookTitle,
+        transaction.memberName,
+        transaction.status,
+        transaction.fine
+      ].join(' ').toLowerCase().includes(search);
+
+      const matchesFilter = this.transactionFilter === 'all'
+        || (this.transactionFilter === 'issued' && transaction.status === 'Issued')
+        || (this.transactionFilter === 'returned' && transaction.status === 'Returned')
+        || (this.transactionFilter === 'overdue' && transaction.status === 'Overdue');
+
+      return matchesSearch && matchesFilter;
+    });
+  }
+
   private getBookPages(): number {
     return Math.max(1, Math.ceil(this.getFilteredBooks().length / this.pageSize));
   }
@@ -341,6 +481,36 @@ export class AdminDashboardComponent {
   private getVisibleBooks(): any[] {
     const start = (this.bookPage - 1) * this.pageSize;
     return this.getFilteredBooks().slice(start, start + this.pageSize);
+  }
+
+  private getTransactionPages(): number {
+    return Math.max(1, Math.ceil(this.getFilteredTransactions().length / this.pageSize));
+  }
+
+  private getVisibleTransactions(): TransactionRecord[] {
+    const start = (this.transactionPage - 1) * this.pageSize;
+    return this.getFilteredTransactions().slice(start, start + this.pageSize);
+  }
+
+  private getActiveMembers(): any[] {
+    return this.members.filter(member => member.memberType === 'Member' && member.isActive);
+  }
+
+  private getBorrowableBooks(): any[] {
+    return this.books.filter(book => book.availableQuantity > 0);
+  }
+
+  nextTransactionPage(): void {
+    const totalPages = this.getTransactionPages();
+    if (this.transactionPage < totalPages) {
+      this.transactionPage += 1;
+    }
+  }
+
+  previousTransactionPage(): void {
+    if (this.transactionPage > 1) {
+      this.transactionPage -= 1;
+    }
   }
 
   nextBookPage(): void {
@@ -383,6 +553,11 @@ export class AdminDashboardComponent {
     const totalMemberPages = this.getMemberPages();
     const visibleBooks = this.getVisibleBooks();
     const totalBookPages = this.getBookPages();
+    const visibleTransactions = this.getVisibleTransactions();
+    const totalTransactionPages = this.getTransactionPages();
+    const borrowableBooks = this.getBorrowableBooks();
+    const activeMembers = this.getActiveMembers();
+    const activeTransactions = this.transactions.filter(transaction => transaction.status !== 'Returned');
 
     // Prepare section-specific HTML so only the chosen section renders
     let sectionHtml = '';
@@ -569,6 +744,95 @@ export class AdminDashboardComponent {
                 </section>
               </div>
       `;
+    } else if (this.currentSection === 'transactions') {
+      sectionHtml = `
+              <div class="members-toolbar">
+                <input
+                  class="members-search"
+                  type="text"
+                  placeholder="Search transaction, book, member, status"
+                  value="${this.transactionSearch}"
+                  oninput="window.updateAdminTransactionSearch(this.value)"
+                >
+                <select class="members-filter" onchange="window.updateAdminTransactionFilter(this.value)">
+                  <option value="all" ${this.transactionFilter === 'all' ? 'selected' : ''}>All transactions</option>
+                  <option value="issued" ${this.transactionFilter === 'issued' ? 'selected' : ''}>Issued</option>
+                  <option value="returned" ${this.transactionFilter === 'returned' ? 'selected' : ''}>Returned</option>
+                  <option value="overdue" ${this.transactionFilter === 'overdue' ? 'selected' : ''}>Overdue</option>
+                </select>
+              </div>
+
+              <div class="members-layout">
+                <section class="members-panel">
+                  <div class="members-panel-header">
+                    <h2>Transaction List</h2>
+                    <span>${this.getFilteredTransactions().length} results</span>
+                  </div>
+                  <div class="members-list">
+                    ${visibleTransactions.length ? visibleTransactions.map(transaction => `
+                      <div class="member-row">
+                        <div class="member-main">
+                          <strong>#${transaction.transactionId} · ${transaction.bookTitle}</strong>
+                          <span>${transaction.memberName}</span>
+                          <small>Issued: ${transaction.issueDate ? new Date(transaction.issueDate).toLocaleDateString() : 'N/A'} · Due: ${transaction.dueDate ? new Date(transaction.dueDate).toLocaleDateString() : 'N/A'}</small>
+                          <small>Fine: ${transaction.fine} · ${transaction.isDamaged ? 'Damaged' : 'No damage'}</small>
+                        </div>
+                        <div class="member-meta">
+                          <span class="member-status ${transaction.status === 'Returned' ? 'active' : 'inactive'}">${transaction.status}</span>
+                          <div class="member-actions">
+                            ${transaction.status !== 'Returned' ? `<button class="action-icon" title="Return transaction" aria-label="Return transaction" onclick="window.openAdminReturnTransaction(${transaction.transactionId})">↩</button>` : ''}
+                          </div>
+                        </div>
+                      </div>
+                    `).join('') : '<div class="empty-state">No transactions match your search.</div>'}
+                  </div>
+                  <div class="members-pagination">
+                    <button class="pagination-btn" onclick="window.adminPreviousTransactionPage()" ${this.transactionPage === 1 ? 'disabled' : ''}>Prev</button>
+                    <span>Page ${this.transactionPage} of ${totalTransactionPages}</span>
+                    <button class="pagination-btn" onclick="window.adminNextTransactionPage()" ${this.transactionPage >= totalTransactionPages ? 'disabled' : ''}>Next</button>
+                  </div>
+                </section>
+
+                <section class="members-panel register-panel">
+                  <div class="members-panel-header">
+                    <h2>Issue Book</h2>
+                  </div>
+                  <div class="register-form">
+                    <select class="register-input" onchange="window.updateAdminIssueTransactionField('bookId', this.value)">
+                      <option value="">Select book</option>
+                      ${borrowableBooks.map(book => `
+                        <option value="${book.bookId}" ${this.issueTransactionForm.bookId === String(book.bookId) ? 'selected' : ''}>${book.title} (${book.availableQuantity} available)</option>
+                      `).join('')}
+                    </select>
+                    <select class="register-input" onchange="window.updateAdminIssueTransactionField('memberId', this.value)">
+                      <option value="">Select member</option>
+                      ${activeMembers.map(member => `
+                        <option value="${member.memberId}" ${this.issueTransactionForm.memberId === String(member.memberId) ? 'selected' : ''}>${member.firstName} ${member.lastName}</option>
+                      `).join('')}
+                    </select>
+                    <input class="register-input" type="number" min="1" placeholder="Days to return" value="${this.issueTransactionForm.daysToReturn}" oninput="window.updateAdminIssueTransactionField('daysToReturn', this.value)">
+                    <button class="register-btn" onclick="window.submitAdminIssueTransaction()">Issue Book</button>
+                  </div>
+
+                  <div class="members-panel-header transaction-subheader">
+                    <h2>Return Book</h2>
+                  </div>
+                  <div class="register-form">
+                    <select class="register-input" onchange="window.updateAdminReturnTransactionField('transactionId', this.value)">
+                      <option value="">Select issued transaction</option>
+                      ${activeTransactions.map(transaction => `
+                        <option value="${transaction.transactionId}" ${this.returnTransactionForm.transactionId === String(transaction.transactionId) ? 'selected' : ''}>#${transaction.transactionId} · ${transaction.bookTitle}</option>
+                      `).join('')}
+                    </select>
+                    <label class="register-input transaction-toggle">
+                      <input type="checkbox" ${this.returnTransactionForm.isDamaged ? 'checked' : ''} onchange="window.updateAdminReturnTransactionField('isDamaged', this.checked)">
+                      Damaged on return
+                    </label>
+                    <button class="register-btn" onclick="window.submitAdminReturnTransaction()">Return Book</button>
+                  </div>
+                </section>
+              </div>
+      `;
     }
 
     return `
@@ -593,13 +857,13 @@ export class AdminDashboardComponent {
               <span class="icon">📚</span>
               <span class="label">Books</span>
             </a>
+            <a href="#" onclick="window.navigateToAdminPage('transactions')" class="nav-item ${this.currentSection === 'transactions' ? 'active' : ''}">
+              <span class="icon">💳</span>
+              <span class="label">Transactions</span>
+            </a>
             <a href="#" onclick="window.navigateToAdminPage('reservations')" class="nav-item">
               <span class="icon">🔖</span>
               <span class="label">Reservations</span>
-            </a>
-            <a href="#" onclick="window.navigateToAdminPage('transactions')" class="nav-item">
-              <span class="icon">💳</span>
-              <span class="label">Transactions</span>
             </a>
             <hr class="nav-divider">
             <a href="#" onclick="window.navigateToAdminPage('profile')" class="nav-item">

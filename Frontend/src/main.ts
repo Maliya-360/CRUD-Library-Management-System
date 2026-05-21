@@ -62,7 +62,7 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 };
 
 (window as any).navigateToAdminPage = function(page: string) {
-  if (page === 'dashboard' || page === 'users' || page === 'books') {
+  if (page === 'dashboard' || page === 'users' || page === 'books' || page === 'transactions') {
     (adminDashboardComponent as any).setSection(page as any);
     const app = document.getElementById('app');
     if (!app) return;
@@ -142,6 +142,63 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).updateAdminBookField = function(field: string, value: string) {
   (adminDashboardComponent as any).updateBookField(field, value);
+};
+
+(window as any).updateAdminTransactionSearch = function(value: string) {
+  (adminDashboardComponent as any).updateTransactionSearch(value);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminTransactionFilter = function(value: string) {
+  (adminDashboardComponent as any).updateTransactionFilter(value);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).adminNextTransactionPage = function() {
+  (adminDashboardComponent as any).nextTransactionPage();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).adminPreviousTransactionPage = function() {
+  (adminDashboardComponent as any).previousTransactionPage();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminIssueTransactionField = function(field: string, value: string) {
+  (adminDashboardComponent as any).updateIssueTransactionField(field, value);
+};
+
+(window as any).submitAdminIssueTransaction = async function() {
+  await (adminDashboardComponent as any).submitIssueTransaction();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).openAdminReturnTransaction = function(transactionId: number) {
+  (adminDashboardComponent as any).openReturnTransaction(transactionId);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminReturnTransactionField = function(field: string, value: string | boolean) {
+  (adminDashboardComponent as any).updateReturnTransactionField(field, value);
+};
+
+(window as any).submitAdminReturnTransaction = async function() {
+  await (adminDashboardComponent as any).submitReturnTransaction();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
 };
 
 (window as any).submitAdminRegisterBook = async function() {

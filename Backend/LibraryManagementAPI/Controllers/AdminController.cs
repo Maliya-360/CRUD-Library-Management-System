@@ -70,6 +70,7 @@ namespace LibraryManagementAPI.Controllers
                     DueDate = transaction.DueDate,
                     ReturnDate = transaction.ReturnDate,
                     Fine = transaction.Fine,
+                    IsDamaged = transaction.IsDamaged,
                     Status = transaction.Status
                 })
                 .ToListAsync();

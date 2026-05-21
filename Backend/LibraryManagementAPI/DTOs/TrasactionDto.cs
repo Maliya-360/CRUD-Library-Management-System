@@ -13,6 +13,7 @@ namespace LibraryManagementAPI.DTOs
         public DateTime DueDate { get; set; }
         public DateTime? ReturnDate { get; set; }
         public decimal Fine { get; set; }
+        public bool IsDamaged { get; set; }
         public string Status { get; set; }
     }
 
@@ -30,5 +31,6 @@ namespace LibraryManagementAPI.DTOs
     public class ReturnBookDto
     {
         public int TransactionId { get; set; }
+        public bool IsDamaged { get; set; }
     }
 }

@@ -60,7 +60,19 @@ export interface TransactionRecord {
   dueDate: string;
   returnDate: string | null;
   fine: number;
+  isDamaged: boolean;
   status: string;
+}
+
+export interface IssueTransactionRequest {
+  bookId: number;
+  memberId: number;
+  daysToReturn: number;
+}
+
+export interface ReturnTransactionRequest {
+  transactionId: number;
+  isDamaged: boolean;
 }
 
 export interface ReservationRecord {
@@ -306,6 +318,24 @@ export class AuthService {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to load transactions');
+    }
+  }
+
+  async issueTransaction(data: IssueTransactionRequest): Promise<TransactionRecord> {
+    try {
+      const response = await this.api.post<TransactionRecord>('/transactions/issue', data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to create transaction');
+    }
+  }
+
+  async returnTransaction(data: ReturnTransactionRequest): Promise<TransactionRecord> {
+    try {
+      const response = await this.api.put<TransactionRecord>('/transactions/return', data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to return book');
     }
   }
 
