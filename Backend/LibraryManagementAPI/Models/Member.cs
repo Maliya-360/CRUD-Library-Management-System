@@ -21,7 +21,7 @@ namespace LibraryManagementAPI.Models
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Phone is required")]
-        [StringLength(20)]
+        [StringLength(10, ErrorMessage = "Phone number must be 10 digits")]
         public string Phone { get; set; }
 
         [Required(ErrorMessage = "Member type is required")]

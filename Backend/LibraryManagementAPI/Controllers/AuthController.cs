@@ -1,6 +1,8 @@
 using LibraryManagementAPI.DTOs;
 using LibraryManagementAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace LibraryManagementAPI.Controllers
 {
@@ -42,6 +44,26 @@ namespace LibraryManagementAPI.Controllers
 
                 var member = await _authService.RegisterAsync(registerDto);
                 return CreatedAtAction(nameof(Register), member);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<ActionResult<MemberDto>> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("id")?.Value;
+                
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                    return Unauthorized(new { message = "User not authenticated" });
+
+                var member = await _authService.ChangePasswordAsync(userId, changePasswordDto);
+                return Ok(member);
             }
             catch (Exception ex)
             {
