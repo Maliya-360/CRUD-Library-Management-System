@@ -86,6 +86,15 @@ export interface ReservationRecord {
   status: string;
 }
 
+export interface CreateReservationRequest {
+  bookId: number;
+  memberId: number;
+}
+
+export interface CancelReservationRequest {
+  reservationId: number;
+}
+
 export interface AdminDashboardData {
   users: Array<{
     memberId: number;
@@ -345,6 +354,23 @@ export class AuthService {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to load reservations');
+    }
+  }
+
+  async createReservation(data: CreateReservationRequest): Promise<ReservationRecord> {
+    try {
+      const response = await this.api.post<ReservationRecord>('/reservations', data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to create reservation');
+    }
+  }
+
+  async cancelReservation(data: CancelReservationRequest): Promise<void> {
+    try {
+      await this.api.put('/reservations/cancel', data);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to cancel reservation');
     }
   }
 }

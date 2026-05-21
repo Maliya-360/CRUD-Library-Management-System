@@ -42,6 +42,9 @@ namespace LibraryManagementAPI.Services
             if (book == null)
                 throw new Exception($"Book with ID {createReservationDto.BookId} not found.");
 
+            if (book.AvailableQuantity > 0)
+                throw new Exception($"Book '{book.Title}' can only be reserved when no copies are available.");
+
             var member = await _memberRepository.GetByIdAsync(createReservationDto.MemberId);
             if (member == null)
                 throw new Exception($"Member with ID {createReservationDto.MemberId} not found.");

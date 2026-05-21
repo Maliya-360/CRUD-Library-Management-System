@@ -62,7 +62,7 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 };
 
 (window as any).navigateToAdminPage = function(page: string) {
-  if (page === 'dashboard' || page === 'users' || page === 'books' || page === 'transactions') {
+  if (page === 'dashboard' || page === 'users' || page === 'books' || page === 'transactions' || page === 'reservations') {
     (adminDashboardComponent as any).setSection(page as any);
     const app = document.getElementById('app');
     if (!app) return;
@@ -196,6 +196,52 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).submitAdminReturnTransaction = async function() {
   await (adminDashboardComponent as any).submitReturnTransaction();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminReservationSearch = function(value: string) {
+  (adminDashboardComponent as any).updateReservationSearch(value);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminReservationFilter = function(value: string) {
+  (adminDashboardComponent as any).updateReservationFilter(value);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).adminNextReservationPage = function() {
+  (adminDashboardComponent as any).nextReservationPage();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).adminPreviousReservationPage = function() {
+  (adminDashboardComponent as any).previousReservationPage();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminReservationField = function(field: string, value: string) {
+  (adminDashboardComponent as any).updateReservationField(field, value);
+};
+
+(window as any).submitAdminCreateReservation = async function() {
+  await (adminDashboardComponent as any).createReservation();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).cancelAdminReservation = async function(reservationId: number) {
+  await (adminDashboardComponent as any).cancelReservation(reservationId);
   const app = document.getElementById('app');
   if (!app) return;
   app.innerHTML = adminDashboardComponent.render();

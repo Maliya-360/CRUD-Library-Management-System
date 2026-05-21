@@ -1,4 +1,4 @@
-import { AuthService, TransactionRecord } from '../../services/auth.service';
+import { AuthService, ReservationRecord, TransactionRecord } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 
 export class AdminDashboardComponent {
@@ -10,6 +10,7 @@ export class AdminDashboardComponent {
   private members: any[] = [];
   private books: any[] = [];
   private transactions: TransactionRecord[] = [];
+  private reservations: ReservationRecord[] = [];
   private memberSearch = '';
   private memberFilter = 'all';
   private memberPage = 1;
@@ -19,6 +20,9 @@ export class AdminDashboardComponent {
   private transactionSearch = '';
   private transactionFilter = 'all';
   private transactionPage = 1;
+  private reservationSearch = '';
+  private reservationFilter = 'all';
+  private reservationPage = 1;
   private readonly pageSize = 4;
   private totalUsers = 0;
   private totalBooks = 0;
@@ -43,6 +47,10 @@ export class AdminDashboardComponent {
     bookId: '',
     memberId: '',
     daysToReturn: 14
+  };
+  private reservationForm = {
+    bookId: '',
+    memberId: ''
   };
   private returnTransactionForm = {
     transactionId: '',
@@ -84,6 +92,7 @@ export class AdminDashboardComponent {
       this.totalReservations = reservations.length;
       this.books = books;
       this.transactions = transactions;
+      this.reservations = reservations;
     } catch (error: any) {
       this.totalUsers = 0;
       this.totalBooks = 0;
@@ -95,7 +104,7 @@ export class AdminDashboardComponent {
     return true;
   }
 
-  setSection(section: 'dashboard' | 'users' | 'books' | 'transactions'): void {
+  setSection(section: 'dashboard' | 'users' | 'books' | 'transactions' | 'reservations'): void {
     this.currentSection = section;
     this.memberPage = 1;
     if (section === 'books') {
@@ -103,6 +112,9 @@ export class AdminDashboardComponent {
     }
     if (section === 'transactions') {
       this.transactionPage = 1;
+    }
+    if (section === 'reservations') {
+      this.reservationPage = 1;
     }
   }
 
@@ -134,6 +146,16 @@ export class AdminDashboardComponent {
   updateTransactionFilter(value: string): void {
     this.transactionFilter = value;
     this.transactionPage = 1;
+  }
+
+  updateReservationSearch(value: string): void {
+    this.reservationSearch = value;
+    this.reservationPage = 1;
+  }
+
+  updateReservationFilter(value: string): void {
+    this.reservationFilter = value;
+    this.reservationPage = 1;
   }
 
   nextMemberPage(): void {
@@ -169,6 +191,13 @@ export class AdminDashboardComponent {
     this.issueTransactionForm = {
       ...this.issueTransactionForm,
       [field]: parsed as any
+    };
+  }
+
+  updateReservationField(field: keyof typeof this.reservationForm, value: string): void {
+    this.reservationForm = {
+      ...this.reservationForm,
+      [field]: value
     };
   }
 
@@ -239,6 +268,12 @@ export class AdminDashboardComponent {
     this.totalTransactions = this.transactions.length;
   }
 
+  async refreshReservationData(): Promise<void> {
+    const reservations = await this.authService.getAllReservations();
+    this.reservations = reservations;
+    this.totalReservations = this.reservations.length;
+  }
+
   async submitIssueTransaction(): Promise<void> {
     const bookId = parseInt(this.issueTransactionForm.bookId, 10);
     const memberId = parseInt(this.issueTransactionForm.memberId, 10);
@@ -294,6 +329,37 @@ export class AdminDashboardComponent {
       this.currentSection = 'transactions';
     } catch (error: any) {
       this.toastService.error(error.message || 'Failed to return book');
+    }
+  }
+
+  async createReservation(): Promise<void> {
+    const bookId = parseInt(this.reservationForm.bookId, 10);
+    const memberId = parseInt(this.reservationForm.memberId, 10);
+
+    if (!bookId || !memberId) {
+      this.toastService.error('Please fill in all reservation fields');
+      return;
+    }
+
+    try {
+      await this.authService.createReservation({ bookId, memberId });
+      this.toastService.success('Reservation created successfully');
+      this.reservationForm = { bookId: '', memberId: '' };
+      await this.refreshReservationData();
+      this.currentSection = 'reservations';
+    } catch (error: any) {
+      this.toastService.error(error.message || 'Failed to create reservation');
+    }
+  }
+
+  async cancelReservation(reservationId: number): Promise<void> {
+    try {
+      await this.authService.cancelReservation({ reservationId });
+      this.toastService.success('Reservation cancelled');
+      await this.refreshReservationData();
+      this.currentSection = 'reservations';
+    } catch (error: any) {
+      this.toastService.error(error.message || 'Failed to cancel reservation');
     }
   }
 
@@ -474,6 +540,39 @@ export class AdminDashboardComponent {
     });
   }
 
+  private getFilteredReservations(): ReservationRecord[] {
+    const search = this.reservationSearch.trim().toLowerCase();
+
+    return this.reservations.filter(reservation => {
+      const displayStatus = this.getReservationDisplayStatus(reservation);
+      const matchesSearch = !search || [
+        reservation.reservationId,
+        reservation.bookTitle,
+        reservation.memberName,
+        displayStatus
+      ].join(' ').toLowerCase().includes(search);
+
+      const matchesFilter = this.reservationFilter === 'all'
+        || (this.reservationFilter === 'active' && displayStatus === 'Active')
+        || (this.reservationFilter === 'cancelled' && displayStatus === 'Cancelled')
+        || (this.reservationFilter === 'expired' && displayStatus === 'Expired');
+
+      return matchesSearch && matchesFilter;
+    });
+  }
+
+  private getReservationDisplayStatus(reservation: ReservationRecord): string {
+    if (reservation.status === 'Cancelled') {
+      return 'Cancelled';
+    }
+
+    if (reservation.reservationExpiryDate && new Date(reservation.reservationExpiryDate).getTime() < Date.now()) {
+      return 'Expired';
+    }
+
+    return 'Active';
+  }
+
   private getBookPages(): number {
     return Math.max(1, Math.ceil(this.getFilteredBooks().length / this.pageSize));
   }
@@ -487,9 +586,18 @@ export class AdminDashboardComponent {
     return Math.max(1, Math.ceil(this.getFilteredTransactions().length / this.pageSize));
   }
 
+  private getReservationPages(): number {
+    return Math.max(1, Math.ceil(this.getFilteredReservations().length / this.pageSize));
+  }
+
   private getVisibleTransactions(): TransactionRecord[] {
     const start = (this.transactionPage - 1) * this.pageSize;
     return this.getFilteredTransactions().slice(start, start + this.pageSize);
+  }
+
+  private getVisibleReservations(): ReservationRecord[] {
+    const start = (this.reservationPage - 1) * this.pageSize;
+    return this.getFilteredReservations().slice(start, start + this.pageSize);
   }
 
   private getActiveMembers(): any[] {
@@ -498,6 +606,10 @@ export class AdminDashboardComponent {
 
   private getBorrowableBooks(): any[] {
     return this.books.filter(book => book.availableQuantity > 0);
+  }
+
+  private getReservableBooks(): any[] {
+    return this.books.filter(book => book.availableQuantity <= 0);
   }
 
   nextTransactionPage(): void {
@@ -510,6 +622,19 @@ export class AdminDashboardComponent {
   previousTransactionPage(): void {
     if (this.transactionPage > 1) {
       this.transactionPage -= 1;
+    }
+  }
+
+  nextReservationPage(): void {
+    const totalPages = this.getReservationPages();
+    if (this.reservationPage < totalPages) {
+      this.reservationPage += 1;
+    }
+  }
+
+  previousReservationPage(): void {
+    if (this.reservationPage > 1) {
+      this.reservationPage -= 1;
     }
   }
 
@@ -555,7 +680,10 @@ export class AdminDashboardComponent {
     const totalBookPages = this.getBookPages();
     const visibleTransactions = this.getVisibleTransactions();
     const totalTransactionPages = this.getTransactionPages();
+    const visibleReservations = this.getVisibleReservations();
+    const totalReservationPages = this.getReservationPages();
     const borrowableBooks = this.getBorrowableBooks();
+    const reservableBooks = this.getReservableBooks();
     const activeMembers = this.getActiveMembers();
     const activeTransactions = this.transactions.filter(transaction => transaction.status !== 'Returned');
 
@@ -833,6 +961,76 @@ export class AdminDashboardComponent {
                 </section>
               </div>
       `;
+    } else if (this.currentSection === 'reservations') {
+      sectionHtml = `
+              <div class="members-toolbar">
+                <input
+                  class="members-search"
+                  type="text"
+                  placeholder="Search reservation, book, member, status"
+                  value="${this.reservationSearch}"
+                  oninput="window.updateAdminReservationSearch(this.value)"
+                >
+                <select class="members-filter" onchange="window.updateAdminReservationFilter(this.value)">
+                  <option value="all" ${this.reservationFilter === 'all' ? 'selected' : ''}>All reservations</option>
+                  <option value="active" ${this.reservationFilter === 'active' ? 'selected' : ''}>Active</option>
+                  <option value="cancelled" ${this.reservationFilter === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                  <option value="expired" ${this.reservationFilter === 'expired' ? 'selected' : ''}>Expired</option>
+                </select>
+              </div>
+
+              <div class="members-layout">
+                <section class="members-panel">
+                  <div class="members-panel-header">
+                    <h2>Reservation List</h2>
+                    <span>${this.getFilteredReservations().length} results</span>
+                  </div>
+                  <div class="members-list">
+                    ${visibleReservations.length ? visibleReservations.map(reservation => `
+                      <div class="member-row">
+                        <div class="member-main">
+                          <strong>#${reservation.reservationId} · ${reservation.bookTitle}</strong>
+                          <span>${reservation.memberName}</span>
+                          <small>Reserved: ${reservation.reservationDate ? new Date(reservation.reservationDate).toLocaleDateString() : 'N/A'} · Expires: ${reservation.reservationExpiryDate ? new Date(reservation.reservationExpiryDate).toLocaleDateString() : 'N/A'}</small>
+                        </div>
+                        <div class="member-meta">
+                          <span class="member-status ${this.getReservationDisplayStatus(reservation) === 'Active' ? 'active' : 'inactive'}">${this.getReservationDisplayStatus(reservation)}</span>
+                          <div class="member-actions">
+                            ${this.getReservationDisplayStatus(reservation) === 'Active' ? `<button class="action-icon danger" title="Cancel reservation" aria-label="Cancel reservation" onclick="window.cancelAdminReservation(${reservation.reservationId})">✕</button>` : ''}
+                          </div>
+                        </div>
+                      </div>
+                    `).join('') : '<div class="empty-state">No reservations match your search.</div>'}
+                  </div>
+                  <div class="members-pagination">
+                    <button class="pagination-btn" onclick="window.adminPreviousReservationPage()" ${this.reservationPage === 1 ? 'disabled' : ''}>Prev</button>
+                    <span>Page ${this.reservationPage} of ${totalReservationPages}</span>
+                    <button class="pagination-btn" onclick="window.adminNextReservationPage()" ${this.reservationPage >= totalReservationPages ? 'disabled' : ''}>Next</button>
+                  </div>
+                </section>
+
+                <section class="members-panel register-panel">
+                  <div class="members-panel-header">
+                    <h2>Create Reservation</h2>
+                  </div>
+                  <div class="register-form">
+                    <select class="register-input" onchange="window.updateAdminReservationField('bookId', this.value)">
+                      <option value="">Select book</option>
+                      ${reservableBooks.map(book => `
+                        <option value="${book.bookId}" ${this.reservationForm.bookId === String(book.bookId) ? 'selected' : ''}>${book.title} (0 available)</option>
+                      `).join('')}
+                    </select>
+                    <select class="register-input" onchange="window.updateAdminReservationField('memberId', this.value)">
+                      <option value="">Select User</option>
+                      ${activeMembers.map(member => `
+                        <option value="${member.memberId}" ${this.reservationForm.memberId === String(member.memberId) ? 'selected' : ''}>${member.firstName} ${member.lastName}</option>
+                      `).join('')}
+                    </select>
+                    <button class="register-btn" onclick="window.submitAdminCreateReservation()">Create Reservation</button>
+                  </div>
+                </section>
+              </div>
+      `;
     }
 
     return `
@@ -861,7 +1059,7 @@ export class AdminDashboardComponent {
               <span class="icon">💳</span>
               <span class="label">Transactions</span>
             </a>
-            <a href="#" onclick="window.navigateToAdminPage('reservations')" class="nav-item">
+            <a href="#" onclick="window.navigateToAdminPage('reservations')" class="nav-item ${this.currentSection === 'reservations' ? 'active' : ''}">
               <span class="icon">🔖</span>
               <span class="label">Reservations</span>
             </a>
