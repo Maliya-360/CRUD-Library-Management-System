@@ -29,8 +29,16 @@ export class MemberDashboardComponent implements OnInit {
 
   bookSearch = '';
   bookFilter = 'all';
+
+  bookPage = 1;
+  borrowedPage = 1;
+  overduePage = 1;
+
+  readonly pageSize = 3;
+
   profileModalOpen = false;
   loading = signal(false);
+
 
   profileForm = { firstName: '', lastName: '', email: '' };
   passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
@@ -53,6 +61,12 @@ export class MemberDashboardComponent implements OnInit {
       this.transactions = transactions;
       this.memberProfile =
         members.find(m => m.memberId === this.currentUser?.memberId) ?? null;
+
+      // Reset pages whenever fresh data loads
+      this.bookPage = 1;
+      this.borrowedPage = 1;
+      this.overduePage = 1;
+
       this.profileForm = {
         firstName: this.memberProfile?.firstName || this.currentUser.firstName || '',
         lastName: this.memberProfile?.lastName || this.currentUser.lastName || '',
@@ -66,6 +80,7 @@ export class MemberDashboardComponent implements OnInit {
   get filteredBooks(): BookRecord[] {
     const search = this.bookSearch.trim().toLowerCase();
     return this.books.filter(book => {
+
       const matchesSearch =
         !search ||
         [book.title, book.author, book.isbn, book.category].join(' ').toLowerCase().includes(search);
@@ -84,6 +99,59 @@ export class MemberDashboardComponent implements OnInit {
   get overdueTransactions(): TransactionRecord[] {
     return this.borrowedTransactions.filter(t => this.isOverdue(t));
   }
+
+  get pagedFilteredBooks(): BookRecord[] {
+    return this.filteredBooks.slice((this.bookPage - 1) * this.pageSize, this.bookPage * this.pageSize);
+  }
+
+  get pagedBorrowedTransactions(): TransactionRecord[] {
+    return this.borrowedTransactions.slice((this.borrowedPage - 1) * this.pageSize, this.borrowedPage * this.pageSize);
+  }
+
+  get pagedOverdueTransactions(): TransactionRecord[] {
+    return this.overdueTransactions.slice((this.overduePage - 1) * this.pageSize, this.overduePage * this.pageSize);
+  }
+
+  get bookTotalPages(): number {
+    return Math.max(1, Math.ceil(this.filteredBooks.length / this.pageSize));
+  }
+
+  get borrowedTotalPages(): number {
+    return Math.max(1, Math.ceil(this.borrowedTransactions.length / this.pageSize));
+  }
+
+  get overdueTotalPages(): number {
+    return Math.max(1, Math.ceil(this.overdueTransactions.length / this.pageSize));
+  }
+
+  nextBooks(): void {
+    this.bookPage = Math.min(this.bookTotalPages, this.bookPage + 1);
+  }
+
+  prevBooks(): void {
+    this.bookPage = Math.max(1, this.bookPage - 1);
+  }
+
+  nextBorrowed(): void {
+    this.borrowedPage = Math.min(this.borrowedTotalPages, this.borrowedPage + 1);
+  }
+
+  prevBorrowed(): void {
+    this.borrowedPage = Math.max(1, this.borrowedPage - 1);
+  }
+
+  nextOverdue(): void {
+    this.overduePage = Math.min(this.overdueTotalPages, this.overduePage + 1);
+  }
+
+  prevOverdue(): void {
+    this.overduePage = Math.max(1, this.overduePage - 1);
+  }
+
+  onBookSearchOrFilterChanged(): void {
+    this.bookPage = 1;
+  }
+
 
   get stats() {
     return [

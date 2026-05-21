@@ -39,17 +39,20 @@
           <span class="panel-count">{{ filteredBooks.length }} results</span>
         </header>
         <div class="panel-toolbar">
-          <input class="toolbar-search" type="text" placeholder="Search title, author, ISBN, category" [(ngModel)]="bookSearch" />
-          <select class="toolbar-filter" [(ngModel)]="bookFilter">
+          <input class="toolbar-search" type="text" placeholder="Search title, author, ISBN, category" [(ngModel)]="bookSearch" (ngModelChange)="onBookSearchOrFilterChanged()" />
+          <select class="toolbar-filter" [(ngModel)]="bookFilter" (ngModelChange)="onBookSearchOrFilterChanged()">
+
             <option value="all">All books</option>
             <option value="available">Available</option>
             <option value="unavailable">Unavailable</option>
           </select>
         </div>
+
         <div class="panel-list">
           @if (filteredBooks.length) {
-            @for (book of filteredBooks; track book.bookId) {
+            @for (book of pagedFilteredBooks; track book.bookId) {
               <div class="list-row">
+
                 <div class="list-row-main">
                   <strong>{{ book.title }}</strong>
                   <span>{{ book.author }}</span>
@@ -67,7 +70,16 @@
             <div class="empty-state">No books match your search.</div>
           }
         </div>
+
+        <footer class="panel-footer">
+          <div class="panel-pagination">
+            <button type="button" class="page-btn" [disabled]="bookPage <= 1" (click)="prevBooks()">Previous</button>
+            <span class="page-info">Page {{ bookPage }} of {{ bookTotalPages }}</span>
+            <button type="button" class="page-btn" [disabled]="bookPage >= bookTotalPages" (click)="nextBooks()">Next</button>
+          </div>
+        </footer>
       </article>
+
 
       <article class="dashboard-panel">
         <header class="panel-header">
@@ -76,7 +88,8 @@
         </header>
         <div class="panel-list panel-list-tall">
           @if (borrowedTransactions.length) {
-            @for (t of borrowedTransactions; track t.transactionId) {
+            @for (t of pagedBorrowedTransactions; track t.transactionId) {
+
               <div class="list-row">
                 <div class="list-row-main">
                   <strong>{{ t.bookTitle }}</strong>
@@ -101,7 +114,7 @@
         </header>
         <div class="panel-list panel-list-tall">
           @if (overdueTransactions.length) {
-            @for (t of overdueTransactions; track t.transactionId) {
+            @for (t of pagedOverdueTransactions; track t.transactionId) {
               <div class="list-row">
                 <div class="list-row-main">
                   <strong>{{ t.bookTitle }}</strong>
