@@ -58,10 +58,6 @@ namespace LibraryManagementAPI.Services
             if (activeBorrowCount >= MAX_ACTIVE_BORROWED_BOOKS)
                 throw new Exception("A single member can borrow at most 5 books at a time.");
 
-            var activeBookLoan = transactions.Any(t => t.BookId == issueBookDto.BookId && !IsReturned(t.Status));
-            if (activeBookLoan)
-                throw new Exception($"Book '{book.Title}' is already borrowed and cannot be assigned until it is returned.");
-
             if (book.AvailableQuantity <= 0)
                 throw new Exception($"Book '{book.Title}' is not available.");
 

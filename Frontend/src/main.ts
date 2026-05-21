@@ -2,7 +2,7 @@ import { ToastService } from './app/services/toast.service';
 import { AuthService } from './app/services/auth.service';
 import { LoginComponent } from './app/pages/login/login.component';
 import { RegisterComponent } from './app/pages/register/register.component';
-import { DashboardComponent } from './app/pages/dashboard/dashboard.component';
+import { DashboardComponent } from './app/pages/dashboard';
 import { AdminDashboardComponent } from './app/pages/admin/admin-dashboard.component';
 import './app/styles/admin.css';
 import './styles.css';
@@ -13,6 +13,27 @@ const loginComponent = new LoginComponent(authService, toastService);
 const registerComponent = new RegisterComponent(authService, toastService);
 const dashboardComponent = new DashboardComponent(authService, toastService);
 const adminDashboardComponent = new AdminDashboardComponent(authService, toastService);
+
+function rerenderDashboardApp(preserveSearchFocus: boolean = false): void {
+  const app = document.getElementById('app');
+  if (!app) return;
+
+  const activeElement = preserveSearchFocus ? document.activeElement as HTMLInputElement | HTMLSelectElement | null : null;
+  const focusKey = activeElement?.getAttribute('data-dashboard-search');
+  const selectionStart = preserveSearchFocus && activeElement instanceof HTMLInputElement ? activeElement.selectionStart : null;
+  const selectionEnd = preserveSearchFocus && activeElement instanceof HTMLInputElement ? activeElement.selectionEnd : null;
+
+  app.innerHTML = dashboardComponent.render();
+
+  if (!focusKey) return;
+
+  const restored = app.querySelector(`[data-dashboard-search="${focusKey}"]`) as HTMLInputElement | HTMLSelectElement | null;
+  restored?.focus();
+
+  if (restored instanceof HTMLInputElement && selectionStart !== null && selectionEnd !== null) {
+    restored.setSelectionRange(selectionStart, selectionEnd);
+  }
+}
 
 function rerenderAdminApp(preserveSearchFocus: boolean = false): void {
   const app = document.getElementById('app');
@@ -53,6 +74,9 @@ function rerenderAdminApp(preserveSearchFocus: boolean = false): void {
         window.navigateTo('login');
         return;
       }
+      if (!(await dashboardComponent.initialize())) {
+        return;
+      }
       app.innerHTML = dashboardComponent.render();
       break;
     case 'admin-dashboard':
@@ -75,6 +99,57 @@ function rerenderAdminApp(preserveSearchFocus: boolean = false): void {
   authService.logout();
   toastService.success('Logged out successfully!');
   window.navigateTo('login');
+};
+
+(window as any).toggleDashboardProfileModal = function() {
+  (dashboardComponent as any).toggleProfileModal();
+  rerenderDashboardApp();
+};
+
+(window as any).updateDashboardBookSearch = function(value: string) {
+  (dashboardComponent as any).updateBookSearch(value);
+  rerenderDashboardApp(true);
+};
+
+(window as any).updateDashboardBookFilter = function(value: string) {
+  (dashboardComponent as any).updateBookFilter(value);
+  rerenderDashboardApp();
+};
+
+(window as any).updateDashboardProfileField = function(field: string, value: string) {
+  (dashboardComponent as any).updateProfileField(field, value);
+};
+
+(window as any).updateDashboardPasswordField = function(field: string, value: string) {
+  (dashboardComponent as any).updatePasswordField(field, value);
+};
+
+(window as any).submitDashboardProfile = async function() {
+  await (dashboardComponent as any).saveProfile();
+  rerenderDashboardApp();
+};
+
+(window as any).submitDashboardPassword = async function() {
+  await (dashboardComponent as any).changePassword();
+  rerenderDashboardApp();
+};
+
+(window as any).updateAdminProfile = function(event: Event) {
+  event.preventDefault();
+  toastService.success('Profile updated successfully!');
+};
+
+(window as any).updateAdminFormField = function(field: string, value: string) {
+  console.log(`Field: ${field}, Value: ${value}`);
+};
+
+(window as any).changeAdminPassword = function(event: Event) {
+  event.preventDefault();
+  toastService.success('Password changed successfully!');
+};
+
+(window as any).updateAdminPasswordField = function(field: string, value: string) {
+  console.log(`Password Field: ${field}, Value: ${value}`);
 };
 
 (window as any).toggleAdminSidebar = function() {
@@ -284,24 +359,6 @@ function rerenderAdminApp(preserveSearchFocus: boolean = false): void {
   authService.logout();
   toastService.success('Logged out successfully!');
   window.location.href = '/login';
-};
-
-(window as any).updateAdminProfile = function(event: Event) {
-  event.preventDefault();
-  toastService.success('Profile updated successfully!');
-};
-
-(window as any).updateAdminFormField = function(field: string, value: string) {
-  console.log(`Field: ${field}, Value: ${value}`);
-};
-
-(window as any).changeAdminPassword = function(event: Event) {
-  event.preventDefault();
-  toastService.success('Password changed successfully!');
-};
-
-(window as any).updateAdminPasswordField = function(field: string, value: string) {
-  console.log(`Password Field: ${field}, Value: ${value}`);
 };
 
 function attachLoginListeners(): void {

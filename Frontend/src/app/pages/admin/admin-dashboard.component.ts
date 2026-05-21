@@ -284,6 +284,20 @@ export class AdminDashboardComponent {
       return;
     }
 
+    const freshBooks = await this.authService.getAllBooks();
+    this.books = freshBooks;
+
+    const selectedBook = this.books.find(book => book.bookId === bookId);
+    if (!selectedBook) {
+      this.toastService.error('Selected book was not found');
+      return;
+    }
+
+    if (selectedBook.availableQuantity <= 0) {
+      this.toastService.error(`Book '${selectedBook.title}' has no available copies right now.`);
+      return;
+    }
+
     try {
       await this.authService.issueTransaction({ bookId, memberId, daysToReturn });
       this.toastService.success('Transaction created successfully');
