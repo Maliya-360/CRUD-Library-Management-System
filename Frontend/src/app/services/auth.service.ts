@@ -18,6 +18,101 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface MemberRecord {
+  memberId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  membershipNumber: string;
+  membershipDate: string;
+  memberType: string;
+  isActive: boolean;
+}
+
+export interface BookRecord {
+  bookId: number;
+  title: string;
+  author: string;
+  isbn: string;
+  publicationDate: string;
+  availableQuantity: number;
+  totalQuantity: number;
+  category: string;
+  isAvailable: boolean;
+}
+
+export interface TransactionRecord {
+  transactionId: number;
+  bookId: number;
+  memberId: number;
+  bookTitle: string;
+  memberName: string;
+  issueDate: string;
+  dueDate: string;
+  returnDate: string | null;
+  fine: number;
+  status: string;
+}
+
+export interface ReservationRecord {
+  reservationId: number;
+  bookId: number;
+  memberId: number;
+  bookTitle: string;
+  memberName: string;
+  reservationDate: string;
+  reservationExpiryDate: string | null;
+  status: string;
+}
+
+export interface AdminDashboardData {
+  users: Array<{
+    memberId: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    membershipNumber: string;
+    membershipDate: string;
+    memberType: string;
+    isActive: boolean;
+  }>;
+  books: Array<{
+    bookId: number;
+    title: string;
+    author: string;
+    isbn: string;
+    publicationDate: string;
+    availableQuantity: number;
+    totalQuantity: number;
+    category: string;
+    isAvailable: boolean;
+  }>;
+  transactions: Array<{
+    transactionId: number;
+    bookId: number;
+    memberId: number;
+    bookTitle: string;
+    memberName: string;
+    issueDate: string;
+    dueDate: string;
+    returnDate: string | null;
+    fine: number;
+    status: string;
+  }>;
+  reservations: Array<{
+    reservationId: number;
+    bookId: number;
+    memberId: number;
+    bookTitle: string;
+    memberName: string;
+    reservationDate: string;
+    reservationExpiryDate: string | null;
+    status: string;
+  }>;
+}
+
 export class AuthService {
   private apiUrl = 'http://localhost:5289/api';
   private api: AxiosInstance;
@@ -105,6 +200,51 @@ export class AuthService {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Password change failed');
+    }
+  }
+
+  async getAdminDashboardData(): Promise<AdminDashboardData> {
+    try {
+      const response = await this.api.get<AdminDashboardData>('/admin/dashboard');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to load admin dashboard data');
+    }
+  }
+
+  async getAllMembers(): Promise<MemberRecord[]> {
+    try {
+      const response = await this.api.get<MemberRecord[]>('/members');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to load members');
+    }
+  }
+
+  async getAllBooks(): Promise<BookRecord[]> {
+    try {
+      const response = await this.api.get<BookRecord[]>('/books');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to load books');
+    }
+  }
+
+  async getAllTransactions(): Promise<TransactionRecord[]> {
+    try {
+      const response = await this.api.get<TransactionRecord[]>('/transactions');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to load transactions');
+    }
+  }
+
+  async getAllReservations(): Promise<ReservationRecord[]> {
+    try {
+      const response = await this.api.get<ReservationRecord[]>('/reservations');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to load reservations');
     }
   }
 }

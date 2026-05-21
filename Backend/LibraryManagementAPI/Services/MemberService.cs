@@ -79,7 +79,6 @@ namespace LibraryManagementAPI.Services
 
         public async Task<MemberDto> RegisterMemberAsync(RegisterMemberDto registerMemberDto)
         {
-            // In Phase 5 (JWT), we'll hash the password here
             var member = new Member
             {
                 FirstName = registerMemberDto.FirstName,
@@ -88,7 +87,7 @@ namespace LibraryManagementAPI.Services
                 Phone = registerMemberDto.Phone,
                 MembershipNumber = GenerateMembershipNumber(),
                 MembershipDate = DateTime.Now,
-                MemberType = "Member", // Default role for self-registration
+                MemberType = "Member",
                 IsActive = true,
                 CreatedDate = DateTime.Now
             };

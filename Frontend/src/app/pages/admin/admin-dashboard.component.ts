@@ -6,40 +6,46 @@ export class AdminDashboardComponent {
   private toastService: ToastService;
   private sidebarOpen: boolean = false;
   private currentUser: any = null;
-  private stats = {
-    totalUsers: 0,
-    totalBooks: 0,
-    activeTransactions: 0,
-    pendingReservations: 0
-  };
+  private totalUsers = 0;
+  private totalBooks = 0;
+  private totalTransactions = 0;
+  private totalReservations = 0;
 
   constructor(authService: AuthService, toastService: ToastService) {
     this.authService = authService;
     this.toastService = toastService;
   }
 
-  async initialize(): Promise<void> {
+  async initialize(): Promise<boolean> {
     this.currentUser = this.authService.getCurrentUser();
     
-    if (this.currentUser?.MemberType !== 'Admin') {
-      window.location.href = '/dashboard';
-      return;
+    if (this.currentUser?.memberType !== 'Admin') {
+      window.navigateTo('dashboard');
+      return false;
     }
 
-    await this.loadStats();
-  }
-
-  private async loadStats(): Promise<void> {
     try {
-      this.stats = {
-        totalUsers: 45,
-        totalBooks: 320,
-        activeTransactions: 12,
-        pendingReservations: 8
-      };
+      const members = await this.authService.getAllMembers();
+      this.totalUsers = members.filter(member => member.memberType === 'Member').length;
+
+      const [books, transactions, reservations] = await Promise.all([
+        this.authService.getAllBooks(),
+        this.authService.getAllTransactions(),
+        this.authService.getAllReservations()
+      ]);
+
+      this.totalBooks = books.length;
+      this.totalTransactions = transactions.length;
+      this.totalReservations = reservations.length;
     } catch (error: any) {
-      this.toastService.error('Failed to load statistics');
+      this.totalUsers = 0;
+      this.totalBooks = 0;
+      this.totalTransactions = 0;
+      this.totalReservations = 0;
+      this.toastService.error(error.message || 'Failed to load dashboard data');
     }
+
+    return true;
   }
 
   toggleSidebar(): void {
@@ -112,8 +118,8 @@ export class AdminDashboardComponent {
           <!-- Dashboard Content -->
           <div class="admin-content">
             <div class="content-header">
-              <h1>Dashboard Analytics</h1>
-              <p class="subtitle">Welcome to Library Management System</p>
+              <h1>Admin Dashboard</h1>
+              <p class="subtitle">Users from the database</p>
             </div>
 
             <!-- Stats Grid -->
@@ -122,7 +128,7 @@ export class AdminDashboardComponent {
                 <div class="stat-icon users">👥</div>
                 <div class="stat-info">
                   <h3>Total Users</h3>
-                  <p class="stat-value">${this.stats.totalUsers}</p>
+                  <p class="stat-value">${this.totalUsers}</p>
                 </div>
               </div>
 
@@ -130,23 +136,23 @@ export class AdminDashboardComponent {
                 <div class="stat-icon books">📚</div>
                 <div class="stat-info">
                   <h3>Total Books</h3>
-                  <p class="stat-value">${this.stats.totalBooks}</p>
+                  <p class="stat-value">${this.totalBooks}</p>
                 </div>
               </div>
 
               <div class="stat-card">
                 <div class="stat-icon transactions">💳</div>
                 <div class="stat-info">
-                  <h3>Active Transactions</h3>
-                  <p class="stat-value">${this.stats.activeTransactions}</p>
+                  <h3>Transactions</h3>
+                  <p class="stat-value">${this.totalTransactions}</p>
                 </div>
               </div>
 
               <div class="stat-card">
                 <div class="stat-icon reservations">🔖</div>
                 <div class="stat-info">
-                  <h3>Pending Reservations</h3>
-                  <p class="stat-value">${this.stats.pendingReservations}</p>
+                  <h3>Reservations</h3>
+                  <p class="stat-value">${this.totalReservations}</p>
                 </div>
               </div>
             </div>

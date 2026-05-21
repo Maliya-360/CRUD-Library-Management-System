@@ -4,6 +4,7 @@ import { LoginComponent } from './app/pages/login/login.component';
 import { RegisterComponent } from './app/pages/register/register.component';
 import { DashboardComponent } from './app/pages/dashboard/dashboard.component';
 import { AdminDashboardComponent } from './app/pages/admin/admin-dashboard.component';
+import './app/styles/admin.css';
 import './styles.css';
 
 const toastService = new ToastService();
@@ -13,7 +14,7 @@ const registerComponent = new RegisterComponent(authService, toastService);
 const dashboardComponent = new DashboardComponent(authService, toastService);
 const adminDashboardComponent = new AdminDashboardComponent(authService, toastService);
 
-(window as any).navigateTo = (page: string) => {
+(window as any).navigateTo = async (page: string) => {
   const app = document.getElementById('app');
   if (!app) return;
 
@@ -36,6 +37,9 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
     case 'admin-dashboard':
       if (!authService.isLoggedIn()) {
         window.navigateTo('login');
+        return;
+      }
+      if (!(await adminDashboardComponent.initialize())) {
         return;
       }
       app.innerHTML = adminDashboardComponent.render();
@@ -183,9 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentPath = window.location.pathname.replace(/^\//, '');
 
   if (currentPath === 'dashboard' || currentPath === 'admin-dashboard') {
-    window.navigateTo(currentPath);
+    void window.navigateTo(currentPath);
     return;
   }
 
-  window.navigateTo('login');
+  void window.navigateTo('login');
 });
