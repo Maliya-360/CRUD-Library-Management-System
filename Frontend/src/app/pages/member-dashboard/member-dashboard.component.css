@@ -1,0 +1,77 @@
+.angular-label {
+  color: #dd0031;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.dashboard-shell {
+  min-height: 100vh;
+  background: var(--light-gray);
+}
+
+.dashboard-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.dashboard-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.dashboard-brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+}
+
+.dashboard-actions {
+  gap: 12px;
+}
+
+.profile-icon-btn,
+.dashboard-logout {
+  cursor: pointer;
+}
+
+.dashboard-page {
+  padding: 24px 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.dashboard-panel .members-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.dashboard-modal {
+  width: min(100%, 720px);
+}
+
+.dashboard-password-block {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

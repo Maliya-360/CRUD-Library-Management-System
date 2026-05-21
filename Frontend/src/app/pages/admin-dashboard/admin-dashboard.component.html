@@ -1,0 +1,297 @@
+<div class="admin-container">
+  <aside class="sidebar" [class.open]="sidebarOpen">
+    <div class="sidebar-header">
+      <h2>📚 Library Admin</h2>
+      <button class="sidebar-close" (click)="toggleSidebar()">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" [class.active]="currentSection === 'dashboard'" (click)="setSection('dashboard')">
+        <span class="icon">📊</span><span class="label">Dashboard</span>
+      </a>
+      <a class="nav-item" [class.active]="currentSection === 'users'" (click)="setSection('users')">
+        <span class="icon">👥</span><span class="label">Users</span>
+      </a>
+      <a class="nav-item" [class.active]="currentSection === 'books'" (click)="setSection('books')">
+        <span class="icon">📚</span><span class="label">Books</span>
+      </a>
+      <a class="nav-item" [class.active]="currentSection === 'transactions'" (click)="setSection('transactions')">
+        <span class="icon">🔄</span><span class="label">Transactions</span>
+      </a>
+      <a class="nav-item" [class.active]="currentSection === 'reservations'" (click)="setSection('reservations')">
+        <span class="icon">📅</span><span class="label">Reservations</span>
+      </a>
+      <hr class="nav-divider" />
+      <a class="nav-item logout" (click)="logout()">
+        <span class="icon">🚪</span><span class="label">Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" (click)="toggleSidebar()">☰</button>
+        <div>
+          <div class="topbar-title">Admin Panel</div>
+          <small class="angular-label">Angular Frontend</small>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span>{{ currentUser?.firstName }} {{ currentUser?.lastName }}</span>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      @if (currentSection === 'dashboard') {
+        <section class="stats-grid">
+          <div class="stat-card"><div class="stat-info"><h3>Users</h3><p class="stat-value">{{ totalUsers }}</p></div></div>
+          <div class="stat-card"><div class="stat-info"><h3>Books</h3><p class="stat-value">{{ totalBooks }}</p></div></div>
+          <div class="stat-card"><div class="stat-info"><h3>Transactions</h3><p class="stat-value">{{ totalTransactions }}</p></div></div>
+          <div class="stat-card"><div class="stat-info"><h3>Reservations</h3><p class="stat-value">{{ totalReservations }}</p></div></div>
+        </section>
+      }
+
+      @if (currentSection === 'users') {
+        <section class="members-layout">
+          <div class="members-panel">
+            <div class="members-panel-header"><h2>Members</h2><span>{{ filteredMembers.length }} results</span></div>
+            <div class="members-toolbar">
+              <input class="members-search" [(ngModel)]="memberSearch" (ngModelChange)="memberPage = 1" placeholder="Search members" />
+              <select class="members-filter" [(ngModel)]="memberFilter" (ngModelChange)="memberPage = 1">
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div class="members-list">
+              @for (m of pagedMembers; track m.memberId) {
+                <div class="member-row">
+                  <div class="member-main">
+                    <strong>{{ m.firstName }} {{ m.lastName }}</strong>
+                    <span>{{ m.email }}</span>
+                  </div>
+                  <div class="member-meta">
+                    <span class="member-status" [class.active]="m.isActive" [class.inactive]="!m.isActive">{{ m.isActive ? 'Active' : 'Inactive' }}</span>
+                    <button class="action-btn" (click)="openEditMember(m)">Edit</button>
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="pagination">
+              <button [disabled]="memberPage <= 1" (click)="memberPage = memberPage - 1">Previous</button>
+              <span>Page {{ memberPage }} / {{ memberPages }}</span>
+              <button [disabled]="memberPage >= memberPages" (click)="memberPage = memberPage + 1">Next</button>
+            </div>
+          </div>
+          <div class="register-panel">
+            <h2>Register Member</h2>
+            <div class="register-form">
+              <input [(ngModel)]="registerMemberForm.firstName" placeholder="First name" />
+              <input [(ngModel)]="registerMemberForm.lastName" placeholder="Last name" />
+              <input [(ngModel)]="registerMemberForm.email" placeholder="Email" />
+              <input [(ngModel)]="registerMemberForm.phone" placeholder="Phone" />
+              <input type="password" [(ngModel)]="registerMemberForm.password" placeholder="Password" />
+              <button class="register-btn" (click)="registerMember()">Register Member</button>
+            </div>
+          </div>
+        </section>
+      }
+
+      @if (currentSection === 'books') {
+        <section class="members-layout">
+          <div class="members-panel">
+            <div class="members-panel-header"><h2>Books</h2><span>{{ filteredBooks.length }} results</span></div>
+            <div class="members-toolbar">
+              <input class="members-search" [(ngModel)]="bookSearch" (ngModelChange)="bookPage = 1" placeholder="Search books" />
+              <select class="members-filter" [(ngModel)]="bookFilter" (ngModelChange)="bookPage = 1">
+                <option value="all">All</option>
+                <option value="available">Available</option>
+                <option value="unavailable">Unavailable</option>
+              </select>
+            </div>
+            <div class="members-list">
+              @for (b of pagedBooks; track b.bookId) {
+                <div class="member-row">
+                  <div class="member-main">
+                    <strong>{{ b.title }}</strong>
+                    <span>{{ b.author }} · {{ b.category }}</span>
+                  </div>
+                  <div class="member-meta">
+                    <small>{{ b.availableQuantity }}/{{ b.totalQuantity }}</small>
+                    <button class="action-btn" (click)="openEditBook(b)">Edit</button>
+                    <button class="action-btn danger" (click)="openDeleteBook(b.bookId)">Delete</button>
+                  </div>
+                </div>
+              }
+            </div>
+            <div class="pagination">
+              <button [disabled]="bookPage <= 1" (click)="bookPage = bookPage - 1">Previous</button>
+              <span>Page {{ bookPage }} / {{ bookPages }}</span>
+              <button [disabled]="bookPage >= bookPages" (click)="bookPage = bookPage + 1">Next</button>
+            </div>
+          </div>
+          <div class="register-panel">
+            <h2>Add Book</h2>
+            <div class="register-form">
+              <input [(ngModel)]="registerBookForm.title" placeholder="Title" />
+              <input [(ngModel)]="registerBookForm.author" placeholder="Author" />
+              <input [(ngModel)]="registerBookForm.isbn" placeholder="ISBN" />
+              <input type="date" [(ngModel)]="registerBookForm.publicationDate" />
+              <input type="number" [(ngModel)]="registerBookForm.totalQuantity" placeholder="Total quantity" />
+              <input [(ngModel)]="registerBookForm.category" placeholder="Category" />
+              <button class="register-btn" (click)="registerBook()">Create Book</button>
+            </div>
+          </div>
+        </section>
+      }
+
+      @if (currentSection === 'transactions') {
+        <section class="members-layout">
+          <div class="members-panel">
+            <div class="members-panel-header"><h2>Transactions</h2></div>
+            <div class="members-toolbar">
+              <input class="members-search" [(ngModel)]="transactionSearch" (ngModelChange)="transactionPage = 1" />
+              <select class="members-filter" [(ngModel)]="transactionFilter" (ngModelChange)="transactionPage = 1">
+                <option value="all">All</option>
+                <option value="Issued">Issued</option>
+                <option value="Returned">Returned</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+            </div>
+            <div class="members-list">
+              @for (t of pagedTransactions; track t.transactionId) {
+                <div class="member-row">
+                  <div class="member-main">
+                    <strong>{{ t.bookTitle }}</strong>
+                    <span>{{ t.memberName }} · {{ t.status }}</span>
+                    <small>Due {{ formatDate(t.dueDate) }}</small>
+                  </div>
+                  @if (t.status !== 'Returned') {
+                    <button class="action-btn" (click)="openReturnTransaction(t.transactionId)">Return</button>
+                  }
+                </div>
+              }
+            </div>
+            <div class="pagination">
+              <button [disabled]="transactionPage <= 1" (click)="transactionPage = transactionPage - 1">Previous</button>
+              <span>Page {{ transactionPage }} / {{ transactionPages }}</span>
+              <button [disabled]="transactionPage >= transactionPages" (click)="transactionPage = transactionPage + 1">Next</button>
+            </div>
+          </div>
+          <div class="register-panel">
+            <h2>Issue Book</h2>
+            <div class="register-form">
+              <select [(ngModel)]="issueTransactionForm.bookId">
+                <option value="">Select book</option>
+                @for (b of books; track b.bookId) {
+                  <option [value]="b.bookId">{{ b.title }} ({{ b.availableQuantity }} avail)</option>
+                }
+              </select>
+              <select [(ngModel)]="issueTransactionForm.memberId">
+                <option value="">Select member</option>
+                @for (m of members; track m.memberId) {
+                  <option [value]="m.memberId">{{ m.firstName }} {{ m.lastName }}</option>
+                }
+              </select>
+              <input type="number" [(ngModel)]="issueTransactionForm.daysToReturn" placeholder="Days to return" />
+              <button class="register-btn" (click)="submitIssueTransaction()">Issue Book</button>
+            </div>
+            @if (returnTransactionForm.transactionId) {
+              <h2 style="margin-top:20px">Return Book</h2>
+              <div class="register-form">
+                <label><input type="checkbox" [(ngModel)]="returnTransactionForm.isDamaged" /> Damaged</label>
+                <button class="register-btn" (click)="submitReturnTransaction()">Confirm Return</button>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (currentSection === 'reservations') {
+        <section class="members-layout">
+          <div class="members-panel">
+            <div class="members-panel-header"><h2>Reservations</h2></div>
+            <div class="members-list">
+              @for (r of pagedReservations; track r.reservationId) {
+                <div class="member-row">
+                  <div class="member-main">
+                    <strong>{{ r.bookTitle }}</strong>
+                    <span>{{ r.memberName }} · {{ r.status }}</span>
+                  </div>
+                  @if (r.status === 'Active') {
+                    <button class="action-btn danger" (click)="cancelReservation(r.reservationId)">Cancel</button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+          <div class="register-panel">
+            <h2>Create Reservation</h2>
+            <div class="register-form">
+              <select [(ngModel)]="reservationForm.bookId">
+                <option value="">Select book</option>
+                @for (b of books; track b.bookId) {
+                  <option [value]="b.bookId">{{ b.title }}</option>
+                }
+              </select>
+              <select [(ngModel)]="reservationForm.memberId">
+                <option value="">Select member</option>
+                @for (m of members; track m.memberId) {
+                  <option [value]="m.memberId">{{ m.firstName }} {{ m.lastName }}</option>
+                }
+              </select>
+              <button class="register-btn" (click)="createReservation()">Create Reservation</button>
+            </div>
+          </div>
+        </section>
+      }
+    </main>
+  </div>
+</div>
+
+@if (editMemberModalOpen && editMemberForm) {
+  <div class="modal-overlay" (click)="editMemberModalOpen = false">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>Edit Member</h3>
+      <input [(ngModel)]="editMemberForm.firstName" placeholder="First name" />
+      <input [(ngModel)]="editMemberForm.lastName" placeholder="Last name" />
+      <input [(ngModel)]="editMemberForm.email" placeholder="Email" />
+      <input [(ngModel)]="editMemberForm.phone" placeholder="Phone" />
+      <label><input type="checkbox" [(ngModel)]="editMemberForm.isActive" /> Active</label>
+      <div class="modal-actions">
+        <button class="modal-primary" (click)="submitEditMember()">Save</button>
+        <button class="modal-secondary" (click)="editMemberModalOpen = false">Cancel</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (editBookModalOpen && editBookForm) {
+  <div class="modal-overlay" (click)="editBookModalOpen = false">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>Edit Book</h3>
+      <input [(ngModel)]="editBookForm.title" />
+      <input [(ngModel)]="editBookForm.author" />
+      <input [(ngModel)]="editBookForm.isbn" />
+      <input type="date" [(ngModel)]="editBookForm.publicationDate" />
+      <input type="number" [(ngModel)]="editBookForm.totalQuantity" />
+      <input [(ngModel)]="editBookForm.category" />
+      <div class="modal-actions">
+        <button class="modal-primary" (click)="submitEditBook()">Save</button>
+        <button class="modal-secondary" (click)="editBookModalOpen = false">Cancel</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (deleteBookConfirmOpen) {
+  <div class="modal-overlay" (click)="deleteBookConfirmOpen = false">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>Delete this book?</h3>
+      <div class="modal-actions">
+        <button class="modal-primary danger" (click)="confirmDeleteBook()">Delete</button>
+        <button class="modal-secondary" (click)="deleteBookConfirmOpen = false">Cancel</button>
+      </div>
+    </div>
+  </div>
+}

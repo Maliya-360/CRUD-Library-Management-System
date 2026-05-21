@@ -1,0 +1,143 @@
+<div class="dashboard-shell">
+  <header class="admin-topbar dashboard-topbar">
+    <div class="topbar-left">
+      <div class="dashboard-brand">
+        <div class="dashboard-brand-mark">📚</div>
+        <div>
+          <div class="topbar-title">Library Dashboard</div>
+        </div>
+      </div>
+    </div>
+    <div class="topbar-right dashboard-actions">
+      <button class="profile-icon-btn" (click)="toggleProfileModal()" title="Profile settings">👤</button>
+      <button class="logout-btn dashboard-logout" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main class="dashboard-content dashboard-page">
+    <section class="stats-grid dashboard-stats">
+      @for (stat of stats; track stat.title) {
+        <div class="stat-card dashboard-stat" [class]="stat.tone">
+          <div class="stat-icon" [class]="stat.tone">{{ stat.icon }}</div>
+          <div class="stat-info">
+            <h3>{{ stat.title }}</h3>
+            <p class="stat-value">{{ stat.value }}</p>
+          </div>
+        </div>
+      }
+    </section>
+
+    <section class="members-layout dashboard-grid">
+      <section class="members-panel dashboard-panel">
+        <div class="members-panel-header">
+          <h2>Books</h2>
+          <span>{{ filteredBooks.length }} results</span>
+        </div>
+        <div class="members-toolbar dashboard-toolbar">
+          <input class="members-search" type="text" placeholder="Search title, author, ISBN, category" [(ngModel)]="bookSearch" />
+          <select class="members-filter" [(ngModel)]="bookFilter">
+            <option value="all">All books</option>
+            <option value="available">Available</option>
+            <option value="unavailable">Unavailable</option>
+          </select>
+        </div>
+        <div class="members-list">
+          @if (filteredBooks.length) {
+            @for (book of filteredBooks; track book.bookId) {
+              <div class="member-row">
+                <div class="member-main">
+                  <strong>{{ book.title }}</strong>
+                  <span>{{ book.author }}</span>
+                  <small>{{ book.isbn }} · {{ book.category }}</small>
+                </div>
+                <div class="member-meta">
+                  <span class="member-status" [class.active]="book.isAvailable" [class.inactive]="!book.isAvailable">
+                    {{ book.isAvailable ? 'Available' : 'Unavailable' }}
+                  </span>
+                  <small>Qty: {{ book.availableQuantity }}/{{ book.totalQuantity }}</small>
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="empty-state">No books match your search.</div>
+          }
+        </div>
+      </section>
+
+      <section class="members-panel dashboard-panel">
+        <div class="members-panel-header">
+          <h2>Borrowed Books</h2>
+          <span>{{ borrowedTransactions.length }} active</span>
+        </div>
+        <div class="members-list">
+          @if (borrowedTransactions.length) {
+            @for (t of borrowedTransactions; track t.transactionId) {
+              <div class="member-row">
+                <div class="member-main">
+                  <strong>{{ t.bookTitle }}</strong>
+                  <span>Due {{ formatDate(t.dueDate) }}</span>
+                </div>
+                <div class="member-meta">
+                  <span class="member-status active">Borrowed</span>
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="empty-state">You do not have any borrowed books right now.</div>
+          }
+        </div>
+      </section>
+
+      <section class="members-panel dashboard-panel">
+        <div class="members-panel-header">
+          <h2>Overdue Books</h2>
+          <span>{{ overdueTransactions.length }} overdue</span>
+        </div>
+        <div class="members-list">
+          @if (overdueTransactions.length) {
+            @for (t of overdueTransactions; track t.transactionId) {
+              <div class="member-row">
+                <div class="member-main">
+                  <strong>{{ t.bookTitle }}</strong>
+                  <span>Due {{ formatDate(t.dueDate) }}</span>
+                </div>
+                <div class="member-meta">
+                  <span class="member-status inactive">Overdue</span>
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="empty-state">No overdue books at the moment.</div>
+          }
+        </div>
+      </section>
+    </section>
+  </main>
+
+  @if (profileModalOpen) {
+    <div class="modal-overlay" (click)="toggleProfileModal()">
+      <div class="modal dashboard-modal" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Edit Profile Settings</h3>
+          <button class="modal-close" (click)="toggleProfileModal()">✕</button>
+        </div>
+        <div class="modal-grid">
+          <label>First name <input [(ngModel)]="profileForm.firstName" /></label>
+          <label>Last name <input [(ngModel)]="profileForm.lastName" /></label>
+          <label class="modal-span-2">Email <input type="email" [(ngModel)]="profileForm.email" /></label>
+        </div>
+        <div class="modal-actions">
+          <button class="modal-primary" [disabled]="loading()" (click)="saveProfile()">Save changes</button>
+          <button class="modal-secondary" (click)="toggleProfileModal()">Cancel</button>
+        </div>
+        <div class="dashboard-password-block">
+          <h2>Change Password</h2>
+          <input type="password" placeholder="Current password" [(ngModel)]="passwordForm.currentPassword" />
+          <input type="password" placeholder="New password" [(ngModel)]="passwordForm.newPassword" />
+          <input type="password" placeholder="Confirm new password" [(ngModel)]="passwordForm.confirmPassword" />
+          <button class="register-btn" [disabled]="loading()" (click)="changePassword()">Update password</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

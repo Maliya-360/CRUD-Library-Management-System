@@ -1,0 +1,40 @@
+.angular-label {
+  color: #dd0031;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.nav-item {
+  cursor: pointer;
+}
+
+.action-btn {
+  border: 1px solid var(--border);
+  background: var(--white);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: 6px;
+}
+
+.action-btn.danger,
+.modal-primary.danger {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+
+.modal {
+  display: grid;
+  gap: 10px;
+  padding: 24px;
+}
+
+.modal input,
+.register-form input,
+.register-form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
