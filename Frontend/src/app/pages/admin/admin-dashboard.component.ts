@@ -23,7 +23,7 @@ export class AdminDashboardComponent {
   private reservationSearch = '';
   private reservationFilter = 'all';
   private reservationPage = 1;
-  private readonly pageSize = 4;
+  private readonly pageSize = 3;
   private totalUsers = 0;
   private totalBooks = 0;
   private totalTransactions = 0;
@@ -664,6 +664,25 @@ export class AdminDashboardComponent {
     this.sidebarOpen = !this.sidebarOpen;
   }
 
+  private renderSearchToolbar(kind: 'members' | 'books' | 'transactions' | 'reservations', placeholder: string, value: string, filterSelected: string, filterOptions: { value: string; label: string; }[], onSearchFn: string, onFilterFn: string): string {
+    return `
+      <div class="members-toolbar">
+        <input
+          class="members-search"
+          type="text"
+          placeholder="${placeholder}"
+          data-admin-search="${kind}"
+          value="${value}"
+          oninput="${onSearchFn}(this.value)"
+          onchange="${onSearchFn}(this.value)"
+        >
+        <select class="members-filter" onchange="${onFilterFn}(this.value)">
+          ${filterOptions.map(o => `<option value="${o.value}" ${filterSelected === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
+        </select>
+      </div>
+    `;
+  }
+
   navigateTo(page: string): void {
     (window as any).navigateToPage(page);
   }
@@ -747,27 +766,13 @@ export class AdminDashboardComponent {
       `;
     } else if (this.currentSection === 'users') {
       sectionHtml = `
-              <div class="members-toolbar">
-                <input
-                  class="members-search"
-                  type="text"
-                  placeholder="Search name, email, phone, membership number"
-                  value="${this.memberSearch}"
-                  oninput="window.updateAdminMemberSearch(this.value)"
-                >
-                <select class="members-filter" onchange="window.updateAdminMemberFilter(this.value)">
-                  <option value="all" ${this.memberFilter === 'all' ? 'selected' : ''}>All members</option>
-                  <option value="active" ${this.memberFilter === 'active' ? 'selected' : ''}>Active</option>
-                  <option value="inactive" ${this.memberFilter === 'inactive' ? 'selected' : ''}>Inactive</option>
-                </select>
-              </div>
-
               <div class="members-layout">
                 <section class="members-panel">
                   <div class="members-panel-header">
                     <h2>Member List</h2>
                     <span>${this.getFilteredMembers().length} results</span>
                   </div>
+                  ${this.renderSearchToolbar('members', 'Search name, email, phone, membership number', this.memberSearch, this.memberFilter, [{ value: 'all', label: 'All members' }, { value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }], 'window.updateAdminMemberSearch', 'window.updateAdminMemberFilter')}
                   <div class="members-list">
                     ${visibleMembers.length ? visibleMembers.map(member => `
                       <div class="member-row">
@@ -816,20 +821,7 @@ export class AdminDashboardComponent {
                     <h2>Book List</h2>
                     <span>${this.getFilteredBooks().length} results</span>
                   </div>
-                  <div class="members-toolbar">
-                    <input
-                      class="members-search"
-                      type="text"
-                      placeholder="Search title, author, isbn, category"
-                      value="${this.bookSearch}"
-                      oninput="window.updateAdminBookSearch(this.value)"
-                    >
-                    <select class="members-filter" onchange="window.updateAdminBookFilter(this.value)">
-                      <option value="all" ${this.bookFilter === 'all' ? 'selected' : ''}>All books</option>
-                      <option value="available" ${this.bookFilter === 'available' ? 'selected' : ''}>Available</option>
-                      <option value="unavailable" ${this.bookFilter === 'unavailable' ? 'selected' : ''}>Unavailable</option>
-                    </select>
-                  </div>
+                  ${this.renderSearchToolbar('books', 'Search title, author, isbn, category', this.bookSearch, this.bookFilter, [{ value: 'all', label: 'All books' }, { value: 'available', label: 'Available' }, { value: 'unavailable', label: 'Unavailable' }], 'window.updateAdminBookSearch', 'window.updateAdminBookFilter')}
                   <div class="members-list">
                     ${visibleBooks.length ? visibleBooks.map(book => `
                       <div class="member-row">
@@ -874,28 +866,13 @@ export class AdminDashboardComponent {
       `;
     } else if (this.currentSection === 'transactions') {
       sectionHtml = `
-              <div class="members-toolbar">
-                <input
-                  class="members-search"
-                  type="text"
-                  placeholder="Search transaction, book, member, status"
-                  value="${this.transactionSearch}"
-                  oninput="window.updateAdminTransactionSearch(this.value)"
-                >
-                <select class="members-filter" onchange="window.updateAdminTransactionFilter(this.value)">
-                  <option value="all" ${this.transactionFilter === 'all' ? 'selected' : ''}>All transactions</option>
-                  <option value="issued" ${this.transactionFilter === 'issued' ? 'selected' : ''}>Issued</option>
-                  <option value="returned" ${this.transactionFilter === 'returned' ? 'selected' : ''}>Returned</option>
-                  <option value="overdue" ${this.transactionFilter === 'overdue' ? 'selected' : ''}>Overdue</option>
-                </select>
-              </div>
-
               <div class="members-layout">
                 <section class="members-panel">
                   <div class="members-panel-header">
                     <h2>Transaction List</h2>
                     <span>${this.getFilteredTransactions().length} results</span>
                   </div>
+                  ${this.renderSearchToolbar('transactions', 'Search transaction, book, member, status', this.transactionSearch, this.transactionFilter, [{ value: 'all', label: 'All transactions' }, { value: 'issued', label: 'Issued' }, { value: 'returned', label: 'Returned' }, { value: 'overdue', label: 'Overdue' }], 'window.updateAdminTransactionSearch', 'window.updateAdminTransactionFilter')}
                   <div class="members-list">
                     ${visibleTransactions.length ? visibleTransactions.map(transaction => `
                       <div class="member-row">
@@ -963,28 +940,13 @@ export class AdminDashboardComponent {
       `;
     } else if (this.currentSection === 'reservations') {
       sectionHtml = `
-              <div class="members-toolbar">
-                <input
-                  class="members-search"
-                  type="text"
-                  placeholder="Search reservation, book, member, status"
-                  value="${this.reservationSearch}"
-                  oninput="window.updateAdminReservationSearch(this.value)"
-                >
-                <select class="members-filter" onchange="window.updateAdminReservationFilter(this.value)">
-                  <option value="all" ${this.reservationFilter === 'all' ? 'selected' : ''}>All reservations</option>
-                  <option value="active" ${this.reservationFilter === 'active' ? 'selected' : ''}>Active</option>
-                  <option value="cancelled" ${this.reservationFilter === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                  <option value="expired" ${this.reservationFilter === 'expired' ? 'selected' : ''}>Expired</option>
-                </select>
-              </div>
-
               <div class="members-layout">
                 <section class="members-panel">
                   <div class="members-panel-header">
                     <h2>Reservation List</h2>
                     <span>${this.getFilteredReservations().length} results</span>
                   </div>
+                  ${this.renderSearchToolbar('reservations', 'Search reservation, book, member, status', this.reservationSearch, this.reservationFilter, [{ value: 'all', label: 'All reservations' }, { value: 'active', label: 'Active' }, { value: 'cancelled', label: 'Cancelled' }, { value: 'expired', label: 'Expired' }], 'window.updateAdminReservationSearch', 'window.updateAdminReservationFilter')}
                   <div class="members-list">
                     ${visibleReservations.length ? visibleReservations.map(reservation => `
                       <div class="member-row">

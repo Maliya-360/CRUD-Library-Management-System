@@ -14,6 +14,27 @@ const registerComponent = new RegisterComponent(authService, toastService);
 const dashboardComponent = new DashboardComponent(authService, toastService);
 const adminDashboardComponent = new AdminDashboardComponent(authService, toastService);
 
+function rerenderAdminApp(preserveSearchFocus: boolean = false): void {
+  const app = document.getElementById('app');
+  if (!app) return;
+
+  const activeElement = preserveSearchFocus ? document.activeElement as HTMLInputElement | HTMLSelectElement | null : null;
+  const focusKey = activeElement?.getAttribute('data-admin-search');
+  const selectionStart = preserveSearchFocus && activeElement instanceof HTMLInputElement ? activeElement.selectionStart : null;
+  const selectionEnd = preserveSearchFocus && activeElement instanceof HTMLInputElement ? activeElement.selectionEnd : null;
+
+  app.innerHTML = adminDashboardComponent.render();
+
+  if (!focusKey) return;
+
+  const restored = app.querySelector(`[data-admin-search="${focusKey}"]`) as HTMLInputElement | HTMLSelectElement | null;
+  restored?.focus();
+
+  if (restored instanceof HTMLInputElement && selectionStart !== null && selectionEnd !== null) {
+    restored.setSelectionRange(selectionStart, selectionEnd);
+  }
+}
+
 (window as any).navigateTo = async (page: string) => {
   const app = document.getElementById('app');
   if (!app) return;
@@ -64,9 +85,7 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 (window as any).navigateToAdminPage = function(page: string) {
   if (page === 'dashboard' || page === 'users' || page === 'books' || page === 'transactions' || page === 'reservations') {
     (adminDashboardComponent as any).setSection(page as any);
-    const app = document.getElementById('app');
-    if (!app) return;
-    app.innerHTML = adminDashboardComponent.render();
+    rerenderAdminApp();
     return;
   }
 
@@ -75,30 +94,22 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).updateAdminMemberSearch = function(value: string) {
   (adminDashboardComponent as any).updateMemberSearch(value);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp(true);
 };
 
 (window as any).updateAdminMemberFilter = function(value: string) {
   (adminDashboardComponent as any).updateMemberFilter(value);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).adminNextMemberPage = function() {
   (adminDashboardComponent as any).nextMemberPage();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).adminPreviousMemberPage = function() {
   (adminDashboardComponent as any).previousMemberPage();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).updateAdminRegisterField = function(field: string, value: string) {
@@ -107,37 +118,27 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).submitAdminRegisterMember = async function() {
   await (adminDashboardComponent as any).registerMember();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).updateAdminBookSearch = function(value: string) {
   (adminDashboardComponent as any).updateBookSearch(value);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp(true);
 };
 
 (window as any).updateAdminBookFilter = function(value: string) {
   (adminDashboardComponent as any).updateBookFilter(value);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).adminNextBookPage = function() {
   (adminDashboardComponent as any).nextBookPage();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).adminPreviousBookPage = function() {
   (adminDashboardComponent as any).previousBookPage();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).updateAdminBookField = function(field: string, value: string) {
@@ -146,30 +147,22 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).updateAdminTransactionSearch = function(value: string) {
   (adminDashboardComponent as any).updateTransactionSearch(value);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp(true);
 };
 
 (window as any).updateAdminTransactionFilter = function(value: string) {
   (adminDashboardComponent as any).updateTransactionFilter(value);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).adminNextTransactionPage = function() {
   (adminDashboardComponent as any).nextTransactionPage();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).adminPreviousTransactionPage = function() {
   (adminDashboardComponent as any).previousTransactionPage();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).updateAdminIssueTransactionField = function(field: string, value: string) {
@@ -178,16 +171,12 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).submitAdminIssueTransaction = async function() {
   await (adminDashboardComponent as any).submitIssueTransaction();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).openAdminReturnTransaction = function(transactionId: number) {
   (adminDashboardComponent as any).openReturnTransaction(transactionId);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).updateAdminReturnTransactionField = function(field: string, value: string | boolean) {
@@ -196,37 +185,27 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).submitAdminReturnTransaction = async function() {
   await (adminDashboardComponent as any).submitReturnTransaction();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).updateAdminReservationSearch = function(value: string) {
   (adminDashboardComponent as any).updateReservationSearch(value);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp(true);
 };
 
 (window as any).updateAdminReservationFilter = function(value: string) {
   (adminDashboardComponent as any).updateReservationFilter(value);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).adminNextReservationPage = function() {
   (adminDashboardComponent as any).nextReservationPage();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).adminPreviousReservationPage = function() {
   (adminDashboardComponent as any).previousReservationPage();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).updateAdminReservationField = function(field: string, value: string) {
@@ -235,30 +214,22 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).submitAdminCreateReservation = async function() {
   await (adminDashboardComponent as any).createReservation();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).cancelAdminReservation = async function(reservationId: number) {
   await (adminDashboardComponent as any).cancelReservation(reservationId);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).submitAdminRegisterBook = async function() {
   await (adminDashboardComponent as any).registerBook();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).openAdminEditMember = function(memberId: number) {
   (adminDashboardComponent as any).openEditMember(memberId);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).updateAdminEditMemberField = function(field: string, value: string) {
@@ -267,23 +238,17 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).submitAdminEditMember = async function() {
   await (adminDashboardComponent as any).submitEditMember();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).closeAdminEditMember = function() {
   (adminDashboardComponent as any).closeEditMember();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).openAdminEditBook = function(bookId: number) {
   (adminDashboardComponent as any).openEditBook(bookId);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).updateAdminEditBookField = function(field: string, value: string) {
@@ -292,37 +257,27 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).submitAdminEditBook = async function() {
   await (adminDashboardComponent as any).submitEditBook();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).closeAdminEditBook = function() {
   (adminDashboardComponent as any).closeEditBook();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).openAdminDeleteBook = function(bookId: number) {
   (adminDashboardComponent as any).openDeleteBook(bookId);
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).confirmAdminDeleteBook = async function() {
   await (adminDashboardComponent as any).confirmDeleteBook();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).closeAdminDeleteBook = function() {
   (adminDashboardComponent as any).closeDeleteBook();
-  const app = document.getElementById('app');
-  if (!app) return;
-  app.innerHTML = adminDashboardComponent.render();
+  rerenderAdminApp();
 };
 
 (window as any).logoutAdmin = function() {

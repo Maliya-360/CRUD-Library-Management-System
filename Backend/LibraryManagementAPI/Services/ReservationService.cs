@@ -23,8 +23,9 @@ namespace LibraryManagementAPI.Services
 
         public async Task<IEnumerable<ReservationDto>> GetAllReservationsAsync()
         {
-            var reservations = await _reservationRepository.GetAllAsync();
-            return reservations.Select(r => MapToDto(r)).ToList();
+            var reservations = (await _reservationRepository.GetAllAsync()).ToList();
+            var lookup = await BuildLookupAsync();
+            return reservations.Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
         }
 
         public async Task<ReservationDto> GetReservationByIdAsync(int id)
@@ -33,7 +34,8 @@ namespace LibraryManagementAPI.Services
             if (reservation == null)
                 throw new Exception($"Reservation with ID {id} not found.");
 
-            return MapToDto(reservation);
+            var lookup = await BuildLookupAsync();
+            return MapToDto(reservation, lookup.books, lookup.members);
         }
 
         public async Task<ReservationDto> CreateReservationAsync(CreateReservationDto createReservationDto)
@@ -62,7 +64,8 @@ namespace LibraryManagementAPI.Services
             await _reservationRepository.AddAsync(reservation);
             await _reservationRepository.SaveAsync();
 
-            return MapToDto(reservation);
+            var lookup = await BuildLookupAsync();
+            return MapToDto(reservation, lookup.books, lookup.members);
         }
 
         public async Task<bool> CancelReservationAsync(CancelReservationDto cancelReservationDto)
@@ -81,34 +84,47 @@ namespace LibraryManagementAPI.Services
 
         public async Task<IEnumerable<ReservationDto>> GetActiveReservationsAsync()
         {
-            var reservations = await _reservationRepository.GetAllAsync();
+            var reservations = (await _reservationRepository.GetAllAsync()).ToList();
+            var lookup = await BuildLookupAsync();
             var active = reservations.Where(r => r.Status == "Active" && r.ReservationExpiryDate > DateTime.Now);
-            return active.Select(r => MapToDto(r)).ToList();
+            return active.Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
         }
 
         public async Task<IEnumerable<ReservationDto>> GetReservationsByMemberAsync(int memberId)
         {
-            var reservations = await _reservationRepository.GetAllAsync();
+            var reservations = (await _reservationRepository.GetAllAsync()).ToList();
+            var lookup = await BuildLookupAsync();
             var memberReservations = reservations.Where(r => r.MemberId == memberId);
-            return memberReservations.Select(r => MapToDto(r)).ToList();
+            return memberReservations.Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
         }
 
         public async Task<IEnumerable<ReservationDto>> GetReservationsByBookAsync(int bookId)
         {
-            var reservations = await _reservationRepository.GetAllAsync();
+            var reservations = (await _reservationRepository.GetAllAsync()).ToList();
+            var lookup = await BuildLookupAsync();
             var bookReservations = reservations.Where(r => r.BookId == bookId);
-            return bookReservations.Select(r => MapToDto(r)).ToList();
+            return bookReservations.Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
         }
 
-        private ReservationDto MapToDto(Reservation reservation)
+        private async Task<(Dictionary<int, Book> books, Dictionary<int, Member> members)> BuildLookupAsync()
         {
+            var books = (await _bookRepository.GetAllAsync()).ToDictionary(book => book.BookId);
+            var members = (await _memberRepository.GetAllAsync()).ToDictionary(member => member.MemberId);
+            return (books, members);
+        }
+
+        private ReservationDto MapToDto(Reservation reservation, IReadOnlyDictionary<int, Book> books, IReadOnlyDictionary<int, Member> members)
+        {
+            books.TryGetValue(reservation.BookId, out var book);
+            members.TryGetValue(reservation.MemberId, out var member);
+
             return new ReservationDto
             {
                 ReservationId = reservation.ReservationId,
                 BookId = reservation.BookId,
                 MemberId = reservation.MemberId,
-                BookTitle = reservation.Book?.Title ?? "N/A",
-                MemberName = $"{reservation.Member?.FirstName} {reservation.Member?.LastName}" ?? "N/A",
+                BookTitle = book?.Title ?? "N/A",
+                MemberName = member == null ? "N/A" : $"{member.FirstName} {member.LastName}",
                 ReservationDate = reservation.ReservationDate,
                 ReservationExpiryDate = reservation.ReservationExpiryDate,
                 Status = reservation.Status
