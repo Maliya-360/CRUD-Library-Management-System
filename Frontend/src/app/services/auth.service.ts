@@ -82,4 +82,29 @@ export class AuthService {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
   }
+
+  setCurrentUser(user: LoginResponse): void {
+    localStorage.setItem('user', JSON.stringify(user));
+  }
+
+  async updateProfile(memberId: number, data: any): Promise<any> {
+    try {
+      const response = await this.api.put(`/members/${memberId}`, data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Profile update failed');
+    }
+  }
+
+  async changePassword(memberId: number, currentPassword: string, newPassword: string): Promise<any> {
+    try {
+      const response = await this.api.post(`/members/${memberId}/change-password`, {
+        currentPassword,
+        newPassword
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Password change failed');
+    }
+  }
 }

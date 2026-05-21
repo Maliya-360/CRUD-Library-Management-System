@@ -3,6 +3,7 @@ import { AuthService } from './app/services/auth.service';
 import { LoginComponent } from './app/pages/login/login.component';
 import { RegisterComponent } from './app/pages/register/register.component';
 import { DashboardComponent } from './app/pages/dashboard/dashboard.component';
+import { AdminDashboardComponent } from './app/pages/admin/admin-dashboard.component';
 import './styles.css';
 
 const toastService = new ToastService();
@@ -10,6 +11,7 @@ const authService = new AuthService(toastService);
 const loginComponent = new LoginComponent(authService, toastService);
 const registerComponent = new RegisterComponent(authService, toastService);
 const dashboardComponent = new DashboardComponent(authService, toastService);
+const adminDashboardComponent = new AdminDashboardComponent(authService, toastService);
 
 (window as any).navigateTo = (page: string) => {
   const app = document.getElementById('app');
@@ -31,6 +33,13 @@ const dashboardComponent = new DashboardComponent(authService, toastService);
       }
       app.innerHTML = dashboardComponent.render();
       break;
+    case 'admin-dashboard':
+      if (!authService.isLoggedIn()) {
+        window.navigateTo('login');
+        return;
+      }
+      app.innerHTML = adminDashboardComponent.render();
+      break;
     default:
       window.navigateTo('login');
   }
@@ -38,7 +47,66 @@ const dashboardComponent = new DashboardComponent(authService, toastService);
 };
 
 (window as any).logout = () => {
-  dashboardComponent.logout();
+  authService.logout();
+  toastService.success('Logged out successfully!');
+  window.navigateTo('login');
+};
+
+(window as any).toggleAdminSidebar = function() {
+  const sidebar = document.querySelector('.sidebar');
+  sidebar?.classList.toggle('open');
+};
+
+(window as any).navigateToAdminPage = function(page: string) {
+  const app = document.getElementById('app');
+  if (!app) return;
+
+  switch (page) {
+    case 'dashboard':
+      app.innerHTML = '<div class="admin-content"><h1>Admin Dashboard</h1></div>';
+      break;
+    case 'users':
+      app.innerHTML = '<div class="admin-content"><h1>Users Management</h1></div>';
+      break;
+    case 'books':
+      app.innerHTML = '<div class="admin-content"><h1>Books Management</h1></div>';
+      break;
+    case 'reservations':
+      app.innerHTML = '<div class="admin-content"><h1>Reservations</h1></div>';
+      break;
+    case 'transactions':
+      app.innerHTML = '<div class="admin-content"><h1>Transactions</h1></div>';
+      break;
+    case 'profile':
+      app.innerHTML = '<div class="admin-content"><h1>Profile Settings</h1></div>';
+      break;
+    default:
+      console.log('Navigate to:', page);
+  }
+};
+
+(window as any).logoutAdmin = function() {
+  authService.logout();
+  toastService.success('Logged out successfully!');
+  window.location.href = '/login';
+};
+
+(window as any).updateAdminProfile = function(event: Event) {
+  event.preventDefault();
+  toastService.success('Profile updated successfully!');
+};
+
+(window as any).updateAdminFormField = function(field: string, value: string) {
+  console.log(`Field: ${field}, Value: ${value}`);
+};
+
+(window as any).changeAdminPassword = function(event: Event) {
+  event.preventDefault();
+  toastService.success('Password changed successfully!');
+};
+
+(window as any).updateAdminPasswordField = function(field: string, value: string) {
+  console.log(`Password Field: ${field}, Value: ${value}`);
 };
 
 function attachLoginListeners(): void {
@@ -57,7 +125,12 @@ function attachLoginListeners(): void {
         const response = await authService.login(email, password);
         authService.setUser(response, response.token);
         toastService.success('Login successful!');
-        window.navigateTo('dashboard');
+        
+        if (response.memberType === 'Admin') {
+          window.navigateTo('admin-dashboard');
+        } else {
+          window.navigateTo('dashboard');
+        }
       } catch (error: any) {
         toastService.error(error.message);
         btn.disabled = false;
@@ -85,6 +158,11 @@ function attachRegisterListeners(): void {
         return;
       }
 
+      if (password.length < 8) {
+        toastService.error('Password must be at least 8 characters');
+        return;
+      }
+
       btn.disabled = true;
       btn.textContent = 'Registering...';
 
@@ -102,5 +180,12 @@ function attachRegisterListeners(): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const currentPath = window.location.pathname.replace(/^\//, '');
+
+  if (currentPath === 'dashboard' || currentPath === 'admin-dashboard') {
+    window.navigateTo(currentPath);
+    return;
+  }
+
   window.navigateTo('login');
 });
