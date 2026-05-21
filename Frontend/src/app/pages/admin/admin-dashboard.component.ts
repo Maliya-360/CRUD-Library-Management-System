@@ -8,9 +8,13 @@ export class AdminDashboardComponent {
   private currentUser: any = null;
   private currentSection: 'dashboard' | 'users' = 'dashboard';
   private members: any[] = [];
+  private books: any[] = [];
   private memberSearch = '';
   private memberFilter = 'all';
   private memberPage = 1;
+  private bookSearch = '';
+  private bookFilter = 'all';
+  private bookPage = 1;
   private readonly pageSize = 4;
   private totalUsers = 0;
   private totalBooks = 0;
@@ -22,6 +26,14 @@ export class AdminDashboardComponent {
     email: '',
     phone: '',
     password: ''
+  };
+  private registerBookForm = {
+    title: '',
+    author: '',
+    isbn: '',
+    publicationDate: '',
+    totalQuantity: 1,
+    category: ''
   };
 
   constructor(authService: AuthService, toastService: ToastService) {
@@ -51,6 +63,7 @@ export class AdminDashboardComponent {
       this.totalBooks = books.length;
       this.totalTransactions = transactions.length;
       this.totalReservations = reservations.length;
+      this.books = books;
     } catch (error: any) {
       this.totalUsers = 0;
       this.totalBooks = 0;
@@ -62,9 +75,12 @@ export class AdminDashboardComponent {
     return true;
   }
 
-  setSection(section: 'dashboard' | 'users'): void {
+  setSection(section: 'dashboard' | 'users' | 'books'): void {
     this.currentSection = section;
     this.memberPage = 1;
+    if (section === 'books') {
+      this.bookPage = 1;
+    }
   }
 
   updateMemberSearch(value: string): void {
@@ -75,6 +91,16 @@ export class AdminDashboardComponent {
   updateMemberFilter(value: string): void {
     this.memberFilter = value;
     this.memberPage = 1;
+  }
+
+  updateBookSearch(value: string): void {
+    this.bookSearch = value;
+    this.bookPage = 1;
+  }
+
+  updateBookFilter(value: string): void {
+    this.bookFilter = value;
+    this.bookPage = 1;
   }
 
   nextMemberPage(): void {
@@ -94,6 +120,14 @@ export class AdminDashboardComponent {
     this.registerMemberForm = {
       ...this.registerMemberForm,
       [field]: value
+    };
+  }
+
+  updateBookField(field: keyof typeof this.registerBookForm, value: string): void {
+    const parsed = field === 'totalQuantity' ? parseInt(value || '0', 10) : value;
+    this.registerBookForm = {
+      ...this.registerBookForm,
+      [field]: parsed as any
     };
   }
 
@@ -124,6 +158,27 @@ export class AdminDashboardComponent {
     }
   }
 
+  async registerBook(): Promise<void> {
+    const { title, author, isbn, publicationDate, totalQuantity, category } = this.registerBookForm as any;
+
+    if (!title || !author || !isbn || !publicationDate || !totalQuantity || !category) {
+      this.toastService.error('Please fill in all book fields');
+      return;
+    }
+
+    try {
+      await this.authService.createBook({ title, author, isbn, publicationDate, totalQuantity, category });
+      this.toastService.success('Book created successfully');
+      this.registerBookForm = { title: '', author: '', isbn: '', publicationDate: '', totalQuantity: 1, category: '' };
+      const books = await this.authService.getAllBooks();
+      this.books = books;
+      this.totalBooks = this.books.length;
+      this.currentSection = 'books';
+    } catch (error: any) {
+      this.toastService.error(error.message || 'Failed to create book');
+    }
+  }
+
   private getFilteredMembers(): any[] {
     const search = this.memberSearch.trim().toLowerCase();
 
@@ -139,6 +194,45 @@ export class AdminDashboardComponent {
 
       return matchesSearch && matchesFilter;
     });
+  }
+
+  private getFilteredBooks(): any[] {
+    const search = this.bookSearch.trim().toLowerCase();
+
+    return this.books.filter(book => {
+      const matchesSearch = !search || [book.title, book.author, book.isbn, book.category]
+        .join(' ')
+        .toLowerCase()
+        .includes(search);
+
+      const matchesFilter = this.bookFilter === 'all'
+        || (this.bookFilter === 'available' && book.isAvailable)
+        || (this.bookFilter === 'unavailable' && !book.isAvailable);
+
+      return matchesSearch && matchesFilter;
+    });
+  }
+
+  private getBookPages(): number {
+    return Math.max(1, Math.ceil(this.getFilteredBooks().length / this.pageSize));
+  }
+
+  private getVisibleBooks(): any[] {
+    const start = (this.bookPage - 1) * this.pageSize;
+    return this.getFilteredBooks().slice(start, start + this.pageSize);
+  }
+
+  nextBookPage(): void {
+    const totalPages = this.getBookPages();
+    if (this.bookPage < totalPages) {
+      this.bookPage += 1;
+    }
+  }
+
+  previousBookPage(): void {
+    if (this.bookPage > 1) {
+      this.bookPage -= 1;
+    }
   }
 
   private getMemberPages(): number {
@@ -166,63 +260,14 @@ export class AdminDashboardComponent {
   render(): string {
     const visibleMembers = this.getVisibleMembers();
     const totalMemberPages = this.getMemberPages();
+    const visibleBooks = this.getVisibleBooks();
+    const totalBookPages = this.getBookPages();
 
-    return `
-      <div class="admin-container">
-        <!-- Sidebar -->
-        <aside class="sidebar ${this.sidebarOpen ? 'open' : ''}">
-          <div class="sidebar-header">
-            <h2>📚 Library Admin</h2>
-            <button class="sidebar-close" onclick="window.toggleAdminSidebar()">✕</button>
-          </div>
+    // Prepare section-specific HTML so only the chosen section renders
+    let sectionHtml = '';
 
-          <nav class="sidebar-nav">
-            <a href="#" onclick="window.navigateToAdminPage('dashboard')" class="nav-item ${this.currentSection === 'dashboard' ? 'active' : ''}">
-              <span class="icon">📊</span>
-              <span class="label">Dashboard</span>
-            </a>
-            <a href="#" onclick="window.navigateToAdminPage('users')" class="nav-item ${this.currentSection === 'users' ? 'active' : ''}">
-              <span class="icon">👥</span>
-              <span class="label">Users</span>
-            </a>
-            <a href="#" onclick="window.navigateToAdminPage('books')" class="nav-item">
-              <span class="icon">📚</span>
-              <span class="label">Books</span>
-            </a>
-            <a href="#" onclick="window.navigateToAdminPage('reservations')" class="nav-item">
-              <span class="icon">🔖</span>
-              <span class="label">Reservations</span>
-            </a>
-            <a href="#" onclick="window.navigateToAdminPage('transactions')" class="nav-item">
-              <span class="icon">💳</span>
-              <span class="label">Transactions</span>
-            </a>
-            <hr class="nav-divider">
-            <a href="#" onclick="window.navigateToAdminPage('profile')" class="nav-item">
-              <span class="icon">⚙️</span>
-              <span class="label">Profile Settings</span>
-            </a>
-            <a href="#" onclick="window.logoutAdmin()" class="nav-item logout">
-              <span class="icon">🚪</span>
-              <span class="label">Logout</span>
-            </a>
-          </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="admin-main">
-          <!-- Top Bar -->
-          <div class="admin-topbar">
-            <button class="menu-toggle" onclick="window.toggleAdminSidebar()">☰</button>
-            <div class="topbar-right">
-              <span class="user-name">Welcome, ${this.currentUser?.firstName || 'Admin'}</span>
-              <div class="user-avatar">${this.currentUser?.firstName?.charAt(0) || 'A'}</div>
-            </div>
-          </div>
-
-          <!-- Dashboard Content -->
-          <div class="admin-content">
-            ${this.currentSection === 'dashboard' ? `
+    if (this.currentSection === 'dashboard') {
+      sectionHtml = `
               <div class="content-header">
                 <h1>Admin Dashboard</h1>
                 <p class="subtitle">Users from the database</p>
@@ -275,9 +320,9 @@ export class AdminDashboardComponent {
                   </button>
                 </div>
               </div>
-            ` : `
-
-
+      `;
+    } else if (this.currentSection === 'users') {
+      sectionHtml = `
               <div class="members-toolbar">
                 <input
                   class="members-search"
@@ -335,7 +380,125 @@ export class AdminDashboardComponent {
                   </div>
                 </section>
               </div>
-            `}
+      `;
+    } else if (this.currentSection === 'books') {
+      sectionHtml = `
+              <div class="members-layout">
+                <section class="members-panel">
+                  <div class="members-panel-header">
+                    <h2>Book List</h2>
+                    <span>${this.getFilteredBooks().length} results</span>
+                  </div>
+                  <div class="members-toolbar">
+                    <input
+                      class="members-search"
+                      type="text"
+                      placeholder="Search title, author, isbn, category"
+                      value="${this.bookSearch}"
+                      oninput="window.updateAdminBookSearch(this.value)"
+                    >
+                    <select class="members-filter" onchange="window.updateAdminBookFilter(this.value)">
+                      <option value="all" ${this.bookFilter === 'all' ? 'selected' : ''}>All books</option>
+                      <option value="available" ${this.bookFilter === 'available' ? 'selected' : ''}>Available</option>
+                      <option value="unavailable" ${this.bookFilter === 'unavailable' ? 'selected' : ''}>Unavailable</option>
+                    </select>
+                  </div>
+                  <div class="members-list">
+                    ${visibleBooks.length ? visibleBooks.map(book => `
+                      <div class="member-row">
+                        <div class="member-main">
+                          <strong>${book.title}</strong>
+                          <span>${book.author}</span>
+                          <small>${book.isbn} · ${book.category}</small>
+                        </div>
+                        <div class="member-meta">
+                          <span class="member-status ${book.isAvailable ? 'active' : 'inactive'}">${book.isAvailable ? 'Available' : 'Unavailable'}</span>
+                          <small>Qty: ${book.availableQuantity}/${book.totalQuantity}</small>
+                        </div>
+                      </div>
+                    `).join('') : '<div class="empty-state">No books match your search.</div>'}
+                  </div>
+                  <div class="members-pagination">
+                    <button class="pagination-btn" onclick="window.adminPreviousBookPage()" ${this.bookPage === 1 ? 'disabled' : ''}>Prev</button>
+                    <span>Page ${this.bookPage} of ${totalBookPages}</span>
+                    <button class="pagination-btn" onclick="window.adminNextBookPage()" ${this.bookPage >= totalBookPages ? 'disabled' : ''}>Next</button>
+                  </div>
+                </section>
+
+                <section class="members-panel register-panel">
+                  <div class="members-panel-header">
+                    <h2>Add Book</h2>
+                  </div>
+                  <div class="register-form">
+                    <input class="register-input" type="text" placeholder="Title" value="${this.registerBookForm.title}" oninput="window.updateAdminBookField('title', this.value)">
+                    <input class="register-input" type="text" placeholder="Author" value="${this.registerBookForm.author}" oninput="window.updateAdminBookField('author', this.value)">
+                    <input class="register-input" type="text" placeholder="ISBN" value="${this.registerBookForm.isbn}" oninput="window.updateAdminBookField('isbn', this.value)">
+                    <input class="register-input" type="date" placeholder="Publication Date" value="${this.registerBookForm.publicationDate}" oninput="window.updateAdminBookField('publicationDate', this.value)">
+                    <input class="register-input" type="number" min="1" placeholder="Total Quantity" value="${this.registerBookForm.totalQuantity}" oninput="window.updateAdminBookField('totalQuantity', this.value)">
+                    <input class="register-input" type="text" placeholder="Category" value="${this.registerBookForm.category}" oninput="window.updateAdminBookField('category', this.value)">
+                    <button class="register-btn" onclick="window.submitAdminRegisterBook()">Add Book</button>
+                  </div>
+                </section>
+              </div>
+      `;
+    }
+
+    return `
+      <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar ${this.sidebarOpen ? 'open' : ''}">
+          <div class="sidebar-header">
+            <h2>📚 Library Admin</h2>
+            <button class="sidebar-close" onclick="window.toggleAdminSidebar()">✕</button>
+          </div>
+
+          <nav class="sidebar-nav">
+            <a href="#" onclick="window.navigateToAdminPage('dashboard')" class="nav-item ${this.currentSection === 'dashboard' ? 'active' : ''}">
+              <span class="icon">📊</span>
+              <span class="label">Dashboard</span>
+            </a>
+            <a href="#" onclick="window.navigateToAdminPage('users')" class="nav-item ${this.currentSection === 'users' ? 'active' : ''}">
+              <span class="icon">👥</span>
+              <span class="label">Users</span>
+            </a>
+            <a href="#" onclick="window.navigateToAdminPage('books')" class="nav-item ${this.currentSection === 'books' ? 'active' : ''}">
+              <span class="icon">📚</span>
+              <span class="label">Books</span>
+            </a>
+            <a href="#" onclick="window.navigateToAdminPage('reservations')" class="nav-item">
+              <span class="icon">🔖</span>
+              <span class="label">Reservations</span>
+            </a>
+            <a href="#" onclick="window.navigateToAdminPage('transactions')" class="nav-item">
+              <span class="icon">💳</span>
+              <span class="label">Transactions</span>
+            </a>
+            <hr class="nav-divider">
+            <a href="#" onclick="window.navigateToAdminPage('profile')" class="nav-item">
+              <span class="icon">⚙️</span>
+              <span class="label">Profile Settings</span>
+            </a>
+            <a href="#" onclick="window.logoutAdmin()" class="nav-item logout">
+              <span class="icon">🚪</span>
+              <span class="label">Logout</span>
+            </a>
+          </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+          <!-- Top Bar -->
+          <div class="admin-topbar">
+            <button class="menu-toggle" onclick="window.toggleAdminSidebar()">☰</button>
+            <div class="topbar-right">
+              <span class="user-name">Welcome, ${this.currentUser?.firstName || 'Admin'}</span>
+              <div class="user-avatar">${this.currentUser?.firstName?.charAt(0) || 'A'}</div>
+            </div>
+          </div>
+
+          <!-- Admin Content -->
+          <div class="admin-content">
+            ${sectionHtml}
           </div>
         </main>
       </div>

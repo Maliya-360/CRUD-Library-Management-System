@@ -62,8 +62,8 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 };
 
 (window as any).navigateToAdminPage = function(page: string) {
-  if (page === 'dashboard' || page === 'users') {
-    (adminDashboardComponent as any).setSection(page);
+  if (page === 'dashboard' || page === 'users' || page === 'books') {
+    (adminDashboardComponent as any).setSection(page as any);
     const app = document.getElementById('app');
     if (!app) return;
     app.innerHTML = adminDashboardComponent.render();
@@ -107,6 +107,45 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 
 (window as any).submitAdminRegisterMember = async function() {
   await (adminDashboardComponent as any).registerMember();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminBookSearch = function(value: string) {
+  (adminDashboardComponent as any).updateBookSearch(value);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminBookFilter = function(value: string) {
+  (adminDashboardComponent as any).updateBookFilter(value);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).adminNextBookPage = function() {
+  (adminDashboardComponent as any).nextBookPage();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).adminPreviousBookPage = function() {
+  (adminDashboardComponent as any).previousBookPage();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminBookField = function(field: string, value: string) {
+  (adminDashboardComponent as any).updateBookField(field, value);
+};
+
+(window as any).submitAdminRegisterBook = async function() {
+  await (adminDashboardComponent as any).registerBook();
   const app = document.getElementById('app');
   if (!app) return;
   app.innerHTML = adminDashboardComponent.render();

@@ -249,6 +249,23 @@ export class AuthService {
     }
   }
 
+  async createBook(data: { title: string; author: string; isbn: string; publicationDate: string; totalQuantity: number; category: string; }): Promise<BookRecord> {
+    try {
+      const payload = {
+        title: data.title,
+        author: data.author,
+        isbn: data.isbn,
+        publicationDate: data.publicationDate,
+        totalQuantity: data.totalQuantity,
+        category: data.category
+      };
+      const response = await this.api.post<BookRecord>('/books', payload);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to create book');
+    }
+  }
+
   async getAllTransactions(): Promise<TransactionRecord[]> {
     try {
       const response = await this.api.get<TransactionRecord[]>('/transactions');
