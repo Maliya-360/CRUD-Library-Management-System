@@ -725,10 +725,6 @@ export class AdminDashboardComponent {
 
     if (this.currentSection === 'dashboard') {
       sectionHtml = `
-              <div class="content-header">
-                <h1>Admin Dashboard</h1>
-                <p class="subtitle">Users from the database</p>
-              </div>
 
               <div class="stats-grid">
                 <div class="stat-card">

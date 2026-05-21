@@ -256,7 +256,6 @@ export class DashboardComponent {
               <div class="dashboard-brand-mark">📚</div>
               <div>
                 <div class="topbar-title">Library Dashboard</div>
-                <small class="dashboard-subtitle">Browse books, track loans, and manage your account</small>
               </div>
             </div>
           </div>
@@ -265,26 +264,11 @@ export class DashboardComponent {
             <button class="profile-icon-btn" onclick="window.toggleDashboardProfileModal()" title="Profile settings" aria-label="Profile settings">
               <span class="profile-icon">👤</span>
             </button>
-            <span class="user-name">${this.currentUser?.firstName || 'Member'}</span>
-            <div class="user-avatar">${this.currentUser?.firstName?.charAt(0) || 'M'}</div>
             <button class="logout-btn dashboard-logout" onclick="window.logout()">Logout</button>
           </div>
         </header>
 
         <main class="dashboard-content dashboard-page">
-          <section class="dashboard-hero">
-            <div>
-              <p class="dashboard-kicker">Member Dashboard</p>
-              <h1>Welcome back, ${this.currentUser?.firstName || 'Member'}</h1>
-              <p class="dashboard-copy">Search books, check what is available, and keep an eye on borrowed or overdue items.</p>
-            </div>
-            <div class="dashboard-hero-card">
-              <span class="dashboard-hero-label">Membership</span>
-              <strong>${this.memberProfile?.membershipNumber || 'N/A'}</strong>
-              <small>Joined ${this.formatDate(this.memberProfile?.membershipDate)}</small>
-            </div>
-          </section>
-
           <section class="stats-grid dashboard-stats">
             ${stats.map(stat => `
               <div class="stat-card dashboard-stat ${stat.tone}">
@@ -358,7 +342,7 @@ export class DashboardComponent {
               </div>
             </section>
 
-            <section class="members-panel dashboard-panel dashboard-span-2">
+            <section class="members-panel dashboard-panel">
               <div class="members-panel-header">
                 <h2>Overdue Books</h2>
                 <span>${overdueTransactions.length} overdue</span>
@@ -434,6 +418,7 @@ export class DashboardComponent {
           min-height: 100vh;
           background: var(--light-gray);
           color: var(--dark);
+          overflow: hidden;
         }
 
         .dashboard-topbar {
@@ -457,11 +442,6 @@ export class DashboardComponent {
           background: linear-gradient(135deg, var(--primary), var(--secondary));
           color: #fff;
           font-size: 1.2rem;
-        }
-
-        .dashboard-subtitle {
-          color: var(--accent);
-          font-size: 0.82rem;
         }
 
         .dashboard-actions {
@@ -493,62 +473,14 @@ export class DashboardComponent {
         .dashboard-page {
           display: flex;
           flex-direction: column;
-          gap: 22px;
-        }
-
-        .dashboard-hero {
-          display: grid;
-          grid-template-columns: minmax(0, 1.3fr) 260px;
-          gap: 20px;
-          align-items: stretch;
-        }
-
-        .dashboard-kicker {
-          display: inline-flex;
-          margin-bottom: 10px;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          font-size: 0.72rem;
-          color: var(--primary);
-          font-weight: 800;
-        }
-
-        .dashboard-hero h1 {
-          font-size: 2rem;
-          margin-bottom: 8px;
-        }
-
-        .dashboard-copy {
-          color: var(--accent);
-          max-width: 56ch;
-        }
-
-        .dashboard-hero-card {
-          background: linear-gradient(135deg, #0f172a, #1e293b);
-          color: #fff;
-          border-radius: 18px;
-          padding: 20px;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          gap: 10px;
-          box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
-        }
-
-        .dashboard-hero-label {
-          color: #cbd5e1;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          font-size: 0.72rem;
-          font-weight: 700;
-        }
-
-        .dashboard-hero-card strong {
-          font-size: 1.35rem;
+          gap: 28px;
+          height: calc(100vh - 70px);
+          overflow: hidden;
         }
 
         .dashboard-stats {
           margin-bottom: 0;
+          margin-top: 6px;
         }
 
         .dashboard-stat {
@@ -572,15 +504,31 @@ export class DashboardComponent {
         }
 
         .dashboard-grid {
-          grid-template-columns: 1.35fr 0.85fr;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          align-items: stretch;
+          min-height: 0;
+          flex: 1;
         }
 
         .dashboard-panel {
           min-height: 100%;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+        }
+
+        .dashboard-panel .members-panel-header {
+          margin-bottom: 14px;
+        }
+
+        .dashboard-panel .members-panel-header h2 {
+          font-size: 1rem;
         }
 
         .dashboard-toolbar {
           margin-bottom: 16px;
+          flex: 0 0 auto;
         }
 
         .dashboard-book-list,
@@ -589,8 +537,34 @@ export class DashboardComponent {
           max-height: none;
         }
 
-        .dashboard-span-2 {
-          grid-column: span 2;
+        .dashboard-panel .members-list {
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+          padding-right: 4px;
+        }
+
+        .dashboard-panel .members-list::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .dashboard-panel .members-list::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .dashboard-panel .members-list::-webkit-scrollbar-thumb {
+          background: var(--border);
+          border-radius: 999px;
+        }
+
+        .dashboard-book-list,
+        .dashboard-panel .members-list {
+          max-height: calc(100vh - 360px);
+        }
+
+        .dashboard-book-list,
+        .dashboard-panel .members-list {
+          overflow-y: auto;
         }
 
         .dashboard-modal {
@@ -603,14 +577,34 @@ export class DashboardComponent {
           padding-top: 18px;
         }
 
+        @media (max-width: 1100px) {
+          .dashboard-page {
+            height: auto;
+            overflow: visible;
+          }
+
+          .dashboard-shell {
+            overflow: auto;
+          }
+
+          .dashboard-grid {
+            flex: none;
+          }
+
+          .dashboard-book-list,
+          .dashboard-panel .members-list {
+            max-height: 320px;
+          }
+        }
+
         @media (max-width: 900px) {
-          .dashboard-hero,
           .dashboard-grid {
             grid-template-columns: 1fr;
           }
 
-          .dashboard-span-2 {
-            grid-column: span 1;
+          .dashboard-book-list,
+          .dashboard-panel .members-list {
+            max-height: 280px;
           }
         }
       </style>
