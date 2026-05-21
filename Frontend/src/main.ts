@@ -62,31 +62,54 @@ const adminDashboardComponent = new AdminDashboardComponent(authService, toastSe
 };
 
 (window as any).navigateToAdminPage = function(page: string) {
+  if (page === 'dashboard' || page === 'users') {
+    (adminDashboardComponent as any).setSection(page);
+    const app = document.getElementById('app');
+    if (!app) return;
+    app.innerHTML = adminDashboardComponent.render();
+    return;
+  }
+
+  console.log('Navigate to:', page);
+};
+
+(window as any).updateAdminMemberSearch = function(value: string) {
+  (adminDashboardComponent as any).updateMemberSearch(value);
   const app = document.getElementById('app');
   if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
 
-  switch (page) {
-    case 'dashboard':
-      app.innerHTML = '<div class="admin-content"><h1>Admin Dashboard</h1></div>';
-      break;
-    case 'users':
-      app.innerHTML = '<div class="admin-content"><h1>Users Management</h1></div>';
-      break;
-    case 'books':
-      app.innerHTML = '<div class="admin-content"><h1>Books Management</h1></div>';
-      break;
-    case 'reservations':
-      app.innerHTML = '<div class="admin-content"><h1>Reservations</h1></div>';
-      break;
-    case 'transactions':
-      app.innerHTML = '<div class="admin-content"><h1>Transactions</h1></div>';
-      break;
-    case 'profile':
-      app.innerHTML = '<div class="admin-content"><h1>Profile Settings</h1></div>';
-      break;
-    default:
-      console.log('Navigate to:', page);
-  }
+(window as any).updateAdminMemberFilter = function(value: string) {
+  (adminDashboardComponent as any).updateMemberFilter(value);
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).adminNextMemberPage = function() {
+  (adminDashboardComponent as any).nextMemberPage();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).adminPreviousMemberPage = function() {
+  (adminDashboardComponent as any).previousMemberPage();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
+};
+
+(window as any).updateAdminRegisterField = function(field: string, value: string) {
+  (adminDashboardComponent as any).updateRegisterField(field, value);
+};
+
+(window as any).submitAdminRegisterMember = async function() {
+  await (adminDashboardComponent as any).registerMember();
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = adminDashboardComponent.render();
 };
 
 (window as any).logoutAdmin = function() {

@@ -48,15 +48,8 @@ namespace LibraryManagementAPI.Repositories
 
         public async Task<bool> SaveAsync()
         {
-            try
-            {
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

@@ -30,6 +30,14 @@ export interface MemberRecord {
   isActive: boolean;
 }
 
+export interface RegisterMemberRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+}
+
 export interface BookRecord {
   bookId: number;
   title: string;
@@ -218,6 +226,17 @@ export class AuthService {
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to load members');
+    }
+  }
+
+  async registerMember(data: RegisterMemberRequest): Promise<MemberRecord> {
+    try {
+      // Use the same endpoint as public registration so behavior (validation, hashing)
+      // is consistent with the login portal (`/auth/register`).
+      const response = await this.api.post<MemberRecord>('/auth/register', data);
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to register member');
     }
   }
 
