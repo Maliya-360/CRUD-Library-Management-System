@@ -3,55 +3,60 @@
     <div class="topbar-left">
       <div class="dashboard-brand">
         <div class="dashboard-brand-mark">📚</div>
-        <div>
+        <div class="dashboard-brand-text">
           <div class="topbar-title">Library Dashboard</div>
+          @if (currentUser) {
+            <span class="dashboard-welcome">Welcome, {{ currentUser.firstName }}</span>
+          }
         </div>
       </div>
     </div>
     <div class="topbar-right dashboard-actions">
-      <button class="profile-icon-btn" (click)="toggleProfileModal()" title="Profile settings">👤</button>
-      <button class="logout-btn dashboard-logout" (click)="logout()">Logout</button>
+      <button type="button" class="profile-icon-btn" (click)="toggleProfileModal()" title="Profile settings" aria-label="Profile settings">
+        <span class="profile-icon">👤</span>
+      </button>
+      <button type="button" class="dashboard-logout-btn" (click)="logout()">Logout</button>
     </div>
   </header>
 
-  <main class="dashboard-content dashboard-page">
-    <section class="stats-grid dashboard-stats">
+  <main class="dashboard-page">
+    <section class="dashboard-stats-row" aria-label="Statistics">
       @for (stat of stats; track stat.title) {
-        <div class="stat-card dashboard-stat" [class]="stat.tone">
+        <article class="stat-card dashboard-stat" [class]="stat.tone">
           <div class="stat-icon" [class]="stat.tone">{{ stat.icon }}</div>
           <div class="stat-info">
             <h3>{{ stat.title }}</h3>
             <p class="stat-value">{{ stat.value }}</p>
           </div>
-        </div>
+        </article>
       }
     </section>
 
-    <section class="members-layout dashboard-grid">
-      <section class="members-panel dashboard-panel">
-        <div class="members-panel-header">
+    <section class="dashboard-panels-row" aria-label="Library panels">
+      <article class="dashboard-panel">
+        <header class="panel-header">
           <h2>Books</h2>
-          <span>{{ filteredBooks.length }} results</span>
-        </div>
-        <div class="members-toolbar dashboard-toolbar">
-          <input class="members-search" type="text" placeholder="Search title, author, ISBN, category" [(ngModel)]="bookSearch" />
-          <select class="members-filter" [(ngModel)]="bookFilter">
+          <span class="panel-count">{{ filteredBooks.length }} results</span>
+        </header>
+        <div class="panel-toolbar">
+          <input class="toolbar-search" type="text" placeholder="Search title, author, ISBN, category" [(ngModel)]="bookSearch" />
+          <select class="toolbar-filter" [(ngModel)]="bookFilter">
             <option value="all">All books</option>
             <option value="available">Available</option>
             <option value="unavailable">Unavailable</option>
           </select>
         </div>
-        <div class="members-list">
+        <div class="panel-list">
           @if (filteredBooks.length) {
             @for (book of filteredBooks; track book.bookId) {
-              <div class="member-row">
-                <div class="member-main">
+              <div class="list-row">
+                <div class="list-row-main">
                   <strong>{{ book.title }}</strong>
                   <span>{{ book.author }}</span>
                   <small>{{ book.isbn }} · {{ book.category }}</small>
                 </div>
-                <div class="member-meta">
-                  <span class="member-status" [class.active]="book.isAvailable" [class.inactive]="!book.isAvailable">
+                <div class="list-row-meta">
+                  <span class="status-badge" [class.active]="book.isAvailable" [class.inactive]="!book.isAvailable">
                     {{ book.isAvailable ? 'Available' : 'Unavailable' }}
                   </span>
                   <small>Qty: {{ book.availableQuantity }}/{{ book.totalQuantity }}</small>
@@ -62,23 +67,24 @@
             <div class="empty-state">No books match your search.</div>
           }
         </div>
-      </section>
+      </article>
 
-      <section class="members-panel dashboard-panel">
-        <div class="members-panel-header">
+      <article class="dashboard-panel">
+        <header class="panel-header">
           <h2>Borrowed Books</h2>
-          <span>{{ borrowedTransactions.length }} active</span>
-        </div>
-        <div class="members-list">
+          <span class="panel-count">{{ borrowedTransactions.length }} active</span>
+        </header>
+        <div class="panel-list panel-list-tall">
           @if (borrowedTransactions.length) {
             @for (t of borrowedTransactions; track t.transactionId) {
-              <div class="member-row">
-                <div class="member-main">
+              <div class="list-row">
+                <div class="list-row-main">
                   <strong>{{ t.bookTitle }}</strong>
                   <span>Due {{ formatDate(t.dueDate) }}</span>
+                  <small>Borrowed {{ formatDate(t.issueDate) }}</small>
                 </div>
-                <div class="member-meta">
-                  <span class="member-status active">Borrowed</span>
+                <div class="list-row-meta">
+                  <span class="status-badge active">Borrowed</span>
                 </div>
               </div>
             }
@@ -86,23 +92,24 @@
             <div class="empty-state">You do not have any borrowed books right now.</div>
           }
         </div>
-      </section>
+      </article>
 
-      <section class="members-panel dashboard-panel">
-        <div class="members-panel-header">
+      <article class="dashboard-panel">
+        <header class="panel-header">
           <h2>Overdue Books</h2>
-          <span>{{ overdueTransactions.length }} overdue</span>
-        </div>
-        <div class="members-list">
+          <span class="panel-count">{{ overdueTransactions.length }} overdue</span>
+        </header>
+        <div class="panel-list panel-list-tall">
           @if (overdueTransactions.length) {
             @for (t of overdueTransactions; track t.transactionId) {
-              <div class="member-row">
-                <div class="member-main">
+              <div class="list-row">
+                <div class="list-row-main">
                   <strong>{{ t.bookTitle }}</strong>
                   <span>Due {{ formatDate(t.dueDate) }}</span>
+                  <small>Fine: {{ t.fine || 0 }}</small>
                 </div>
-                <div class="member-meta">
-                  <span class="member-status inactive">Overdue</span>
+                <div class="list-row-meta">
+                  <span class="status-badge inactive">Overdue</span>
                 </div>
               </div>
             }
@@ -110,7 +117,7 @@
             <div class="empty-state">No overdue books at the moment.</div>
           }
         </div>
-      </section>
+      </article>
     </section>
   </main>
 
@@ -119,23 +126,23 @@
       <div class="modal dashboard-modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <h3>Edit Profile Settings</h3>
-          <button class="modal-close" (click)="toggleProfileModal()">✕</button>
+          <button type="button" class="modal-close" (click)="toggleProfileModal()">✕</button>
         </div>
         <div class="modal-grid">
-          <label>First name <input [(ngModel)]="profileForm.firstName" /></label>
-          <label>Last name <input [(ngModel)]="profileForm.lastName" /></label>
-          <label class="modal-span-2">Email <input type="email" [(ngModel)]="profileForm.email" /></label>
+          <label class="form-field"><span>First name</span><input [(ngModel)]="profileForm.firstName" /></label>
+          <label class="form-field"><span>Last name</span><input [(ngModel)]="profileForm.lastName" /></label>
+          <label class="form-field modal-span-2"><span>Email</span><input type="email" [(ngModel)]="profileForm.email" /></label>
         </div>
         <div class="modal-actions">
-          <button class="modal-primary" [disabled]="loading()" (click)="saveProfile()">Save changes</button>
-          <button class="modal-secondary" (click)="toggleProfileModal()">Cancel</button>
+          <button type="button" class="modal-primary" [disabled]="loading()" (click)="saveProfile()">Save changes</button>
+          <button type="button" class="modal-secondary" (click)="toggleProfileModal()">Cancel</button>
         </div>
         <div class="dashboard-password-block">
-          <h2>Change Password</h2>
-          <input type="password" placeholder="Current password" [(ngModel)]="passwordForm.currentPassword" />
-          <input type="password" placeholder="New password" [(ngModel)]="passwordForm.newPassword" />
-          <input type="password" placeholder="Confirm new password" [(ngModel)]="passwordForm.confirmPassword" />
-          <button class="register-btn" [disabled]="loading()" (click)="changePassword()">Update password</button>
+          <h4>Change Password</h4>
+          <label class="form-field"><span>Current password</span><input type="password" [(ngModel)]="passwordForm.currentPassword" /></label>
+          <label class="form-field"><span>New password</span><input type="password" [(ngModel)]="passwordForm.newPassword" /></label>
+          <label class="form-field"><span>Confirm password</span><input type="password" [(ngModel)]="passwordForm.confirmPassword" /></label>
+          <button type="button" class="submit-btn" [disabled]="loading()" (click)="changePassword()">Update password</button>
         </div>
       </div>
     </div>

@@ -184,9 +184,11 @@
 .admin-content {
   flex: 1;
   overflow-y: auto;
-  padding: 30px;
+  padding: 24px 28px 32px;
   color: var(--dark);
   background-color: var(--light-gray);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .content-header {
