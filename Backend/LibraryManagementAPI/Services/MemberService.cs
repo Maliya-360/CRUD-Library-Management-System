@@ -61,7 +61,10 @@ namespace LibraryManagementAPI.Services
             member.LastName = updateMemberDto.LastName;
             member.Email = updateMemberDto.Email;
             member.Phone = updateMemberDto.Phone;
-            member.IsActive = updateMemberDto.IsActive;
+            if (updateMemberDto.IsActive.HasValue)
+            {
+                member.IsActive = updateMemberDto.IsActive.Value;
+            }
 
             await _memberRepository.UpdateAsync(member);
             await _memberRepository.SaveAsync();
