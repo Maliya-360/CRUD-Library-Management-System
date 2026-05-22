@@ -65,6 +65,8 @@
 .sidebar-nav {
   flex: 1;
   padding: 15px 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-item {
@@ -82,6 +84,10 @@
   color: var(--white);
   border-left-color: var(--primary);
   padding-left: 23px;
+}
+
+.nav-item.logout {
+  margin-top:auto;
 }
 
 .nav-item.active {

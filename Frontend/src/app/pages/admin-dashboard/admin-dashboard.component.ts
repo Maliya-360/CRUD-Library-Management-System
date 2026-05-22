@@ -298,7 +298,7 @@ export class AdminDashboardComponent implements OnInit {
       await this.loadData();
       this.setSection('reservations');
     } catch {
-      this.toast.error('Failed to create reservation');
+      this.toast.error('Copies are available, no need to reserve');
     }
   }
 
