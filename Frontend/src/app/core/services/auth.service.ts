@@ -65,11 +65,12 @@ export class AuthService {
     return firstValueFrom(this.http.delete<void>(`${this.apiUrl}/members/${memberId}`));
   }
 
-  changePassword(memberId: number, currentPassword: string, newPassword: string): Promise<unknown> {
+  changePassword(currentPassword: string, newPassword: string): Promise<unknown> {
     return firstValueFrom(
-      this.http.post(`${this.apiUrl}/members/${memberId}/change-password`, {
-        currentPassword,
-        newPassword
+      this.http.post(`${this.apiUrl}/Auth/change-password`, {
+        oldPassword: currentPassword,
+        newPassword: newPassword,
+        confirmPassword: newPassword
       })
     );
   }

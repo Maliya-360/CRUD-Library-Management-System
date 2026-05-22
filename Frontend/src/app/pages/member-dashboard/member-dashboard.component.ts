@@ -236,7 +236,7 @@ export class MemberDashboardComponent implements OnInit {
 
     this.loading.set(true);
     try {
-      await this.auth.changePassword(this.currentUser.memberId, currentPassword, newPassword);
+      await this.auth.changePassword(currentPassword, newPassword);
       this.passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
       this.toast.success('Password changed successfully');
     } catch {
