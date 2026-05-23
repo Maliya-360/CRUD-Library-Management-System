@@ -104,6 +104,9 @@ namespace LibraryManagementAPI.Services
             if (member == null)
                 throw new Exception("Member not found.");
 
+            if (changePasswordDto.NewPassword != changePasswordDto.ConfirmPassword)
+                throw new Exception("Passwords do not match.");
+
             if (!VerifyPassword(changePasswordDto.OldPassword, member.PasswordHash))
                 throw new Exception("Current password is incorrect.");
 

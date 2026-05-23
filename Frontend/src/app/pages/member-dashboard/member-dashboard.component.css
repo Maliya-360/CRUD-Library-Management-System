@@ -369,25 +369,147 @@
   background: var(--light-gray);
 }
 
-/* Profile modal */
-.dashboard-modal {
-  width: min(100%, 640px);
+/* Premium Account Settings Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: modalFadeIn 0.25s ease-out;
 }
 
-.dashboard-password-block {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
+.dashboard-modal {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+  width: min(100%, 820px);
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(241, 245, 249, 1);
+  background: #fafafb;
+}
+
+.modal-title-area {
+  display: flex;
+  align-items: center;
   gap: 12px;
 }
 
-.dashboard-password-block h4 {
+.modal-badge-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(37, 99, 235, 0.1);
+  font-size: 1.15rem;
+}
+
+.modal-header h3 {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--dark);
+}
+
+.modal-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 0.78rem;
+  color: var(--accent);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--accent);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.modal-close:hover {
+  background: rgba(241, 245, 249, 1);
+  color: var(--dark);
+}
+
+/* 2-Column Content Grid */
+.modal-content-grid {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.settings-card {
+  background: #ffffff;
+  border: 1px solid rgba(241, 245, 249, 1);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(241, 245, 249, 1);
+  padding-bottom: 10px;
+}
+
+.card-icon {
+  font-size: 1.05rem;
+}
+
+.card-header h4 {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 .form-field {
@@ -397,39 +519,142 @@
 }
 
 .form-field > span {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 600;
   color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
-.form-field input {
+/* Beautiful Icon Input Containers */
+.input-container {
+  position: relative;
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 0.9rem;
-  box-sizing: border-box;
 }
 
-.submit-btn {
+
+.input-container input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 10px 12px 10px 10px;
+  font-size: 0.88rem;
+  color: var(--dark);
+  background: #ffffff;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.input-container input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  background: #ffffff;
+}
+
+/* Beautiful Action Buttons with Loading State support */
+.action-btn {
+  margin-top: auto;
   width: 100%;
   border: none;
   border-radius: 8px;
   padding: 12px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  color: #fff;
-  background: var(--primary);
+  color: #ffffff;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.submit-btn:hover {
-  background: var(--secondary);
+.save-btn {
+  background: var(--primary);
 }
 
-.submit-btn:disabled {
+.save-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.security-btn {
+  background: var(--primary);
+}
+
+.security-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.action-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.action-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Footer Close Bar */
+.modal-footer-bar {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(241, 245, 249, 1);
+  display: flex;
+  justify-content: flex-end;
+  background: #fafafb;
+}
+
+.footer-cancel-btn {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.footer-cancel-btn:hover {
+  background: rgba(241, 245, 249, 1);
+  border-color: #94a3b8;
+  color: var(--dark);
+}
+
+/* Loading Spinner Keyframes */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: buttonSpin 0.75s linear infinite;
+}
+
+@keyframes buttonSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Entrance Animations */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Tablet: 2 stat boxes per row, panels stack or 2+1 */
@@ -448,6 +673,16 @@
 }
 
 @media (max-width: 768px) {
+  .modal-content-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .form-row-2 {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-page {
     height: auto;
     overflow: visible;

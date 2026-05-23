@@ -138,24 +138,97 @@
     <div class="modal-overlay" (click)="toggleProfileModal()">
       <div class="modal dashboard-modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h3>Edit Profile Settings</h3>
-          <button type="button" class="modal-close" (click)="toggleProfileModal()">✕</button>
+          <div class="modal-title-area">
+            <span class="modal-badge-icon">⚙️</span>
+            <div>
+              <h3>Account Settings</h3>
+              <p class="modal-subtitle">Manage your profile details and account security</p>
+            </div>
+          </div>
+          <button type="button" class="modal-close" (click)="toggleProfileModal()" aria-label="Close modal">✕</button>
         </div>
-        <div class="modal-grid">
-          <label class="form-field"><span>First name</span><input [(ngModel)]="profileForm.firstName" /></label>
-          <label class="form-field"><span>Last name</span><input [(ngModel)]="profileForm.lastName" /></label>
-          <label class="form-field modal-span-2"><span>Email</span><input type="email" [(ngModel)]="profileForm.email" /></label>
+
+        <div class="modal-content-grid">
+          <!-- Left Column: Personal Profile Details -->
+          <div class="settings-card">
+            <div class="card-header">
+              <h4>Personal Details</h4>
+            </div>
+            
+            <div class="settings-form">
+              <div class="form-row-2">
+                <label class="form-field">
+                  <span>First Name</span>
+                  <div class="input-container">
+                    <input [(ngModel)]="profileForm.firstName" placeholder="First Name" />
+                  </div>
+                </label>
+                <label class="form-field">
+                  <span>Last Name</span>
+                  <div class="input-container">
+                    <input [(ngModel)]="profileForm.lastName" placeholder="Last Name" />
+                  </div>
+                </label>
+              </div>
+
+              <label class="form-field">
+                <span>Email Address</span>
+                <div class="input-container">
+                  <input type="email" [(ngModel)]="profileForm.email" placeholder="email@example.com" />
+                </div>
+              </label>
+
+              <button type="button" class="action-btn save-btn" [disabled]="loading()" (click)="saveProfile()">
+                @if (loading()) {
+                  <span class="spinner"></span> Saving...
+                } @else {
+                  Update Details
+                }
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Column: Account Security & Password -->
+          <div class="settings-card security-card">
+            <div class="card-header">
+              <h4>Update Password</h4>
+            </div>
+
+            <div class="settings-form">
+              <label class="form-field">
+                <span>Current Password</span>
+                <div class="input-container">
+                  <input type="password" [(ngModel)]="passwordForm.currentPassword" placeholder="••••••••" />
+                </div>
+              </label>
+
+              <label class="form-field">
+                <span>New Password</span>
+                <div class="input-container">
+                  <input type="password" [(ngModel)]="passwordForm.newPassword" placeholder="Min. 8 characters" />
+                </div>
+              </label>
+
+              <label class="form-field">
+                <span>Confirm New Password</span>
+                <div class="input-container">
+                  <input type="password" [(ngModel)]="passwordForm.confirmPassword" placeholder="Repeat new password" />
+                </div>
+              </label>
+
+              <button type="button" class="action-btn security-btn" [disabled]="loading()" (click)="changePassword()">
+                @if (loading()) {
+                  <span class="spinner"></span> Updating...
+                } @else {
+                  Update Password
+                }
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="modal-actions">
-          <button type="button" class="modal-primary" [disabled]="loading()" (click)="saveProfile()">Save changes</button>
-          <button type="button" class="modal-secondary" (click)="toggleProfileModal()">Cancel</button>
-        </div>
-        <div class="dashboard-password-block">
-          <h4>Change Password</h4>
-          <label class="form-field"><span>Current password</span><input type="password" [(ngModel)]="passwordForm.currentPassword" /></label>
-          <label class="form-field"><span>New password</span><input type="password" [(ngModel)]="passwordForm.newPassword" /></label>
-          <label class="form-field"><span>Confirm password</span><input type="password" [(ngModel)]="passwordForm.confirmPassword" /></label>
-          <button type="button" class="submit-btn" [disabled]="loading()" (click)="changePassword()">Update password</button>
+
+        <div class="modal-footer-bar">
+          <button type="button" class="footer-cancel-btn" (click)="toggleProfileModal()">Close</button>
         </div>
       </div>
     </div>
