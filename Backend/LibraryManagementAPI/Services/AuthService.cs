@@ -27,20 +27,6 @@ namespace LibraryManagementAPI.Services
             if (member == null)
                 throw new Exception("Invalid email or password.");
 
-            if (member.MemberType == "Admin" && member.PasswordHash == loginDto.Password)
-            {
-                var token = GenerateJwtToken(member);
-                return new LoginResponseDto
-                {
-                    MemberId = member.MemberId,
-                    FirstName = member.FirstName,
-                    LastName = member.LastName,
-                    Email = member.Email,
-                    MemberType = member.MemberType,
-                    Token = token
-                };
-            }
-
             if (!VerifyPassword(loginDto.Password, member.PasswordHash))
                 throw new Exception("Invalid email or password.");
 

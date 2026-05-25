@@ -79,8 +79,8 @@
                 </select>
               </div>
               <div class="panel-body">
-                <div class="data-list">
-                  @for (m of pagedMembers; track m.memberId) {
+                <div class="data-list" [class.scroll-expanded]="membersExpanded">
+                  @for (m of (membersExpanded ? filteredMembers : pagedMembers); track m.memberId) {
                     <article class="data-row">
                       <div class="data-row-main">
                         <strong class="data-title">{{ m.firstName }} {{ m.lastName }}</strong>
@@ -97,6 +97,11 @@
                   } @empty {
                     <div class="empty-state">No members found.</div>
                   }
+                </div>
+                <div class="list-expand-toggle-container">
+                  <button type="button" class="list-expand-btn" (click)="membersExpanded = !membersExpanded" [title]="membersExpanded ? 'Collapse List' : 'Expand List'">
+                    {{ membersExpanded ? '▲' : '▼' }}
+                  </button>
                 </div>
               </div>
               <footer class="panel-footer">
@@ -143,9 +148,9 @@
                   <option value="unavailable">Unavailable</option>
                 </select>
               </div>
-              <div class="panel-body">
-                <div class="data-list">
-                  @for (b of pagedBooks; track b.bookId) {
+               <div class="panel-body">
+                <div class="data-list" [class.scroll-expanded]="booksExpanded">
+                  @for (b of (booksExpanded ? filteredBooks : pagedBooks); track b.bookId) {
                     <article class="data-row">
                       <div class="data-row-main">
                         <strong class="data-title">{{ b.title }}</strong>
@@ -161,6 +166,11 @@
                   } @empty {
                     <div class="empty-state">No books found.</div>
                   }
+                </div>
+                <div class="list-expand-toggle-container">
+                  <button type="button" class="list-expand-btn" (click)="booksExpanded = !booksExpanded" [title]="booksExpanded ? 'Collapse List' : 'Expand List'">
+                    {{ booksExpanded ? '▲' : '▼' }}
+                  </button>
                 </div>
               </div>
               <footer class="panel-footer">
@@ -208,8 +218,8 @@
                 </select>
               </div>
               <div class="panel-body">
-                <div class="data-list">
-                  @for (t of pagedTransactions; track t.transactionId) {
+                <div class="data-list" [class.scroll-expanded]="transactionsExpanded">
+                  @for (t of (transactionsExpanded ? filteredTransactions : pagedTransactions); track t.transactionId) {
                     <article class="data-row">
                       <div class="data-row-main">
                         <strong class="data-title">{{ t.bookTitle }}</strong>
@@ -226,6 +236,11 @@
                   } @empty {
                     <div class="empty-state">No transactions found.</div>
                   }
+                </div>
+                <div class="list-expand-toggle-container">
+                  <button type="button" class="list-expand-btn" (click)="transactionsExpanded = !transactionsExpanded" [title]="transactionsExpanded ? 'Collapse List' : 'Expand List'">
+                    {{ transactionsExpanded ? '▲' : '▼' }}
+                  </button>
                 </div>
               </div>
               <footer class="panel-footer">
@@ -302,8 +317,8 @@
                 </select>
               </div>
               <div class="panel-body">
-                <div class="data-list">
-                  @for (r of pagedReservations; track r.reservationId) {
+                <div class="data-list" [class.scroll-expanded]="reservationsExpanded">
+                  @for (r of (reservationsExpanded ? filteredReservations : pagedReservations); track r.reservationId) {
                     <article class="data-row">
                       <div class="data-row-main">
                         <strong class="data-title">{{ r.bookTitle }}</strong>
@@ -320,6 +335,11 @@
                   } @empty {
                     <div class="empty-state">No reservations found.</div>
                   }
+                </div>
+                <div class="list-expand-toggle-container">
+                  <button type="button" class="list-expand-btn" (click)="reservationsExpanded = !reservationsExpanded" [title]="reservationsExpanded ? 'Collapse List' : 'Expand List'">
+                    {{ reservationsExpanded ? '▲' : '▼' }}
+                  </button>
                 </div>
               </div>
               <footer class="panel-footer">

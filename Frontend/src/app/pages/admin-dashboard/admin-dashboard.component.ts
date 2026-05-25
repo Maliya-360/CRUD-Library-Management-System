@@ -43,15 +43,22 @@ export class AdminDashboardComponent implements OnInit {
   memberSearch = '';
   memberFilter = 'all';
   memberPage = 1;
+  membersExpanded = false;
+
   bookSearch = '';
   bookFilter = 'all';
   bookPage = 1;
+  booksExpanded = false;
+
   transactionSearch = '';
   transactionFilter = 'all';
   transactionPage = 1;
+  transactionsExpanded = false;
+
   reservationSearch = '';
   reservationFilter = 'all';
   reservationPage = 1;
+  reservationsExpanded = false;
 
   registerMemberForm = { firstName: '', lastName: '', email: '', phone: '', password: '' };
   registerBookForm = { title: '', author: '', isbn: '', publicationDate: '', totalQuantity: 1, category: '' };
@@ -99,6 +106,7 @@ export class AdminDashboardComponent implements OnInit {
   setSection(section: AdminSection): void {
     this.currentSection = section;
     this.memberPage = this.bookPage = this.transactionPage = this.reservationPage = 1;
+    this.membersExpanded = this.booksExpanded = this.transactionsExpanded = this.reservationsExpanded = false;
   }
 
   toggleSidebar(): void {
