@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -31,6 +31,7 @@ export class AdminDashboardComponent implements OnInit {
   sidebarOpen = false;
 
   members: MemberRecord[] = [];
+  adminProfile: MemberRecord | null = null;
   books: BookRecord[] = [];
   transactions: TransactionRecord[] = [];
   reservations: ReservationRecord[] = [];
@@ -66,10 +67,16 @@ export class AdminDashboardComponent implements OnInit {
   reservationForm = { bookId: '', memberId: '' };
   returnTransactionForm = { transactionId: '', isDamaged: false };
 
+  profileModalOpen = false;
+  loadingProfile = signal(false);
+  profileForm = { firstName: '', lastName: '', email: '' };
+  passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+
   editMemberModalOpen = false;
   editMemberForm: MemberRecord | null = null;
   editBookModalOpen = false;
   editBookForm: BookRecord | null = null;
+
   deleteBookConfirmOpen = false;
   deleteBookTargetId: number | null = null;
 
@@ -91,6 +98,7 @@ export class AdminDashboardComponent implements OnInit {
         this.auth.getAllReservations()
       ]);
       this.members = members.filter(m => m.memberType === 'Member');
+      this.adminProfile = members.find(m => m.memberId === this.currentUser?.memberId) ?? null;
       this.books = books;
       this.transactions = transactions;
       this.reservations = reservations;
@@ -98,6 +106,14 @@ export class AdminDashboardComponent implements OnInit {
       this.totalBooks = this.books.length;
       this.totalTransactions = this.transactions.length;
       this.totalReservations = this.reservations.length;
+
+      if (this.currentUser) {
+        this.profileForm = {
+          firstName: this.adminProfile?.firstName || this.currentUser.firstName || '',
+          lastName: this.adminProfile?.lastName || this.currentUser.lastName || '',
+          email: this.adminProfile?.email || this.currentUser.email || ''
+        };
+      }
     } catch {
       this.toast.error('Failed to load admin dashboard data');
     }
@@ -392,5 +408,72 @@ export class AdminDashboardComponent implements OnInit {
     if (!value) return 'N/A';
     const d = new Date(value);
     return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString();
+  }
+
+  toggleProfileModal(): void {
+    this.profileModalOpen = !this.profileModalOpen;
+    if (!this.profileModalOpen) {
+      this.passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+    }
+  }
+
+  async saveProfile(): Promise<void> {
+    if (!this.currentUser) return;
+    const f = this.profileForm;
+    if (!f.firstName || !f.lastName || !f.email) {
+      this.toast.error('Please fill in all profile fields');
+      return;
+    }
+
+    this.loadingProfile.set(true);
+    try {
+      const updated = await this.auth.updateProfile(this.currentUser.memberId, {
+        FirstName: f.firstName,
+        LastName: f.lastName,
+        Email: f.email,
+        Phone: this.adminProfile?.phone || ''
+      });
+
+      this.currentUser = {
+        ...this.currentUser,
+        firstName: updated.firstName ?? f.firstName,
+        lastName: updated.lastName ?? f.lastName,
+        email: updated.email ?? f.email
+      };
+      this.auth.setCurrentUser(this.currentUser);
+      this.toast.success('Profile updated successfully');
+    } catch {
+      this.toast.error('Failed to update profile');
+    } finally {
+      this.loadingProfile.set(false);
+    }
+  }
+
+  async changePassword(): Promise<void> {
+    if (!this.currentUser) return;
+    const { currentPassword, newPassword, confirmPassword } = this.passwordForm;
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      this.toast.error('Please fill in all password fields');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      this.toast.error('Passwords do not match');
+      return;
+    }
+    if (newPassword.length < 8) {
+      this.toast.error('Password must be at least 8 characters');
+      return;
+    }
+
+    this.loadingProfile.set(true);
+    try {
+      await this.auth.changePassword(currentPassword, newPassword);
+      this.passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
+      this.toast.success('Password changed successfully');
+    } catch {
+      this.toast.error('Failed to change password');
+    } finally {
+      this.loadingProfile.set(false);
+    }
   }
 }
