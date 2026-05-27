@@ -9,6 +9,7 @@ namespace LibraryManagementAPI.Services
         private readonly IRepository<Transaction> _transactionRepository;
         private readonly IRepository<Book> _bookRepository;
         private readonly IRepository<Member> _memberRepository;
+        private readonly IRepository<Reservation> _reservationRepository;
         private const int MAX_ACTIVE_BORROWED_BOOKS = 5;
         private const decimal DAILY_FINE = 10;
         private const decimal DAMAGE_FINE = 50;
@@ -16,11 +17,13 @@ namespace LibraryManagementAPI.Services
         public TransactionService(
             IRepository<Transaction> transactionRepository,
             IRepository<Book> bookRepository,
-            IRepository<Member> memberRepository)
+            IRepository<Member> memberRepository,
+            IRepository<Reservation> reservationRepository)
         {
             _transactionRepository = transactionRepository;
             _bookRepository = bookRepository;
             _memberRepository = memberRepository;
+            _reservationRepository = reservationRepository;
         }
 
         public async Task<IEnumerable<TransactionDto>> GetAllTransactionsAsync()
@@ -61,6 +64,16 @@ namespace LibraryManagementAPI.Services
             if (book.AvailableQuantity <= 0)
                 throw new Exception($"Book '{book.Title}' is not available.");
 
+            var reservationQueue = await GetReservationQueueAsync(issueBookDto.BookId);
+            if (reservationQueue.Count > 0)
+            {
+                var nextReservation = reservationQueue.First();
+                if (nextReservation.MemberId != issueBookDto.MemberId)
+                {
+                    throw new Exception($"Book '{book.Title}' is reserved for the next member in line.");
+                }
+            }
+
             var transaction = new Transaction
             {
                 BookId = issueBookDto.BookId,
@@ -75,6 +88,8 @@ namespace LibraryManagementAPI.Services
 
             book.AvailableQuantity--;
             book.IsAvailable = book.AvailableQuantity > 0;
+
+            await CompleteReservationIfMatchedAsync(issueBookDto.BookId, issueBookDto.MemberId);
 
             await _bookRepository.UpdateAsync(book);
             await _transactionRepository.AddAsync(transaction);
@@ -113,6 +128,8 @@ namespace LibraryManagementAPI.Services
 
             book.AvailableQuantity++;
             book.IsAvailable = true;
+
+            await PromoteNextReservationAsync(book.BookId);
 
             await _bookRepository.UpdateAsync(book);
             await _transactionRepository.UpdateAsync(transaction);
@@ -185,6 +202,56 @@ namespace LibraryManagementAPI.Services
         private static bool IsReturned(string status)
         {
             return string.Equals(status, "Returned", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private async Task PromoteNextReservationAsync(int bookId)
+        {
+            var reservations = await GetReservationQueueAsync(bookId);
+
+            var nextReservation = reservations.FirstOrDefault();
+            if (nextReservation == null)
+                return;
+
+            nextReservation.Status = "Ready";
+            await _reservationRepository.UpdateAsync(nextReservation);
+            await _reservationRepository.SaveAsync();
+        }
+
+        private async Task<List<Reservation>> GetReservationQueueAsync(int bookId)
+        {
+            return (await _reservationRepository.GetAllAsync())
+                .Where(reservation =>
+                    reservation.BookId == bookId &&
+                    (string.Equals(reservation.Status, "Active", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(reservation.Status, "Ready", StringComparison.OrdinalIgnoreCase)) &&
+                    reservation.ReservationExpiryDate > DateTime.Now)
+                .OrderBy(reservation => GetStatusPriority(reservation.Status))
+                .ThenBy(reservation => reservation.ReservationDate)
+                .ToList();
+        }
+
+        private async Task CompleteReservationIfMatchedAsync(int bookId, int memberId)
+        {
+            var reservationQueue = await GetReservationQueueAsync(bookId);
+            var reservation = reservationQueue.FirstOrDefault(item => item.MemberId == memberId);
+            if (reservation == null)
+                return;
+
+            reservation.Status = "Completed";
+            await _reservationRepository.UpdateAsync(reservation);
+            await _reservationRepository.SaveAsync();
+        }
+
+        private static int GetStatusPriority(string status)
+        {
+            return status switch
+            {
+                "Ready" => 0,
+                "Active" => 1,
+                "Expired" => 2,
+                "Cancelled" => 3,
+                _ => 4
+            };
         }
     }
 }

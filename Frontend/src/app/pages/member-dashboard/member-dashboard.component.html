@@ -12,6 +12,56 @@
       </div>
     </div>
     <div class="topbar-right dashboard-actions">
+      <div class="notification-shell">
+        <button
+          type="button"
+          class="notification-btn"
+          [class.has-overdue]="hasOverdueNotifications"
+          (click)="toggleNotifications()"
+          title="Notifications"
+          aria-label="Notifications"
+        >
+          <span class="notification-icon">🔔</span>
+          @if (notificationCount > 0) {
+            <span class="notification-badge" [class.is-overdue]="hasOverdueNotifications">{{ notificationCount }}</span>
+          }
+        </button>
+
+        @if (notificationsOpen) {
+          <div class="notification-popover" (click)="$event.stopPropagation()">
+            <div class="notification-popover-head">
+              <div class="notification-popover-title">
+                <p class="notification-kicker">Notifications</p>
+                <h3>Recent alerts</h3>
+                <p class="notification-summary">
+                  {{ notificationCount }} update{{ notificationCount === 1 ? '' : 's' }} from your reservations and loans
+                </p>
+              </div>
+              <button type="button" class="notification-close" (click)="closeNotifications()" aria-label="Close notifications">✕</button>
+            </div>
+
+            @if (notificationCount > 0) {
+              <div class="notification-list">
+                @for (notification of notificationItems; track $index) {
+                  <div class="notification-item" [class.overdue]="notification.kind === 'overdue'" [class.available]="notification.kind === 'available'">
+                    <div class="notification-item-main">
+                      <strong>{{ notification.title }}</strong>
+                      <span>{{ notification.message }}</span>
+                      <small>{{ notification.note }}</small>
+                    </div>
+                    <span class="notification-pill" [class.overdue]="notification.kind === 'overdue'" [class.available]="notification.kind === 'available'">
+                      {{ notification.kind === 'overdue' ? 'Overdue' : 'Available' }}
+                    </span>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="notification-empty">No notifications right now.</div>
+            }
+          </div>
+        }
+      </div>
+
       <button type="button" class="profile-icon-btn" (click)="toggleProfileModal()" title="Profile settings" aria-label="Profile settings">
         <span class="profile-icon">👤</span>
       </button>
@@ -119,10 +169,11 @@
                 <div class="list-row-main">
                   <strong>{{ t.bookTitle }}</strong>
                   <span>Due {{ formatDate(t.dueDate) }}</span>
-                  <small>Fine: {{ t.fine || 0 }}</small>
+                  <small>This book is overdue. Please return it to avoid extra fine.</small>
                 </div>
                 <div class="list-row-meta">
                   <span class="status-badge inactive">Overdue</span>
+                  <small>Fine: {{ t.fine || 0 }}</small>
                 </div>
               </div>
             }

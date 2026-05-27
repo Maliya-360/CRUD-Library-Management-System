@@ -5,6 +5,7 @@ import {
   BookRecord,
   LoginResponse,
   MemberRecord,
+  ReservationRecord,
   TransactionRecord
 } from '../../core/models/library.models';
 import { AuthService } from '../../core/services/auth.service';
@@ -26,6 +27,7 @@ export class MemberDashboardComponent implements OnInit {
   memberProfile: MemberRecord | null = null;
   books: BookRecord[] = [];
   transactions: TransactionRecord[] = [];
+  reservations: ReservationRecord[] = [];
 
   bookSearch = '';
   bookFilter = 'all';
@@ -37,6 +39,7 @@ export class MemberDashboardComponent implements OnInit {
   readonly pageSize = 3;
 
   profileModalOpen = false;
+  notificationsOpen = false;
   loading = signal(false);
 
 
@@ -51,14 +54,16 @@ export class MemberDashboardComponent implements OnInit {
     }
 
     try {
-      const [books, transactions, members] = await Promise.all([
+      const [books, transactions, members, reservations] = await Promise.all([
         this.auth.getAllBooks(),
         this.auth.getAllTransactions(),
-        this.auth.getAllMembers()
+        this.auth.getAllMembers(),
+        this.auth.getAllReservations()
       ]);
 
       this.books = books;
       this.transactions = transactions;
+      this.reservations = reservations;
       this.memberProfile =
         members.find(m => m.memberId === this.currentUser?.memberId) ?? null;
 
@@ -98,6 +103,49 @@ export class MemberDashboardComponent implements OnInit {
 
   get overdueTransactions(): TransactionRecord[] {
     return this.borrowedTransactions.filter(t => this.isOverdue(t));
+  }
+
+  get memberReservations(): ReservationRecord[] {
+    return this.reservations.filter(reservation => reservation.memberId === this.currentUser?.memberId);
+  }
+
+  get readyReservations(): ReservationRecord[] {
+    return this.memberReservations.filter(reservation => this.isReservationReady(reservation));
+  }
+
+  get notificationItems(): Array<{
+    kind: 'available' | 'overdue';
+    title: string;
+    message: string;
+    note: string;
+  }> {
+    const availableReservations = this.readyReservations.map(reservation => ({
+      kind: 'available' as const,
+      title: reservation.bookTitle,
+      message: `${reservation.bookTitle} is available now. You are next in line.`,
+      note: `Reserved on ${this.formatDate(reservation.reservationDate)}`
+    }));
+
+    const overdueItems = this.overdueTransactions.map(transaction => ({
+      kind: 'overdue' as const,
+      title: transaction.bookTitle,
+      message: `${transaction.bookTitle} is overdue. Please return it to avoid more fine.`,
+      note: `Due ${this.formatDate(transaction.dueDate)}`
+    }));
+
+    return [...availableReservations, ...overdueItems];
+  }
+
+  get overduePreview(): TransactionRecord[] {
+    return this.overdueTransactions.slice(0, this.pageSize);
+  }
+
+  get notificationCount(): number {
+    return this.notificationItems.length;
+  }
+
+  get hasOverdueNotifications(): boolean {
+    return this.notificationItems.some(notification => notification.kind === 'overdue');
   }
 
   get pagedFilteredBooks(): BookRecord[] {
@@ -171,6 +219,34 @@ export class MemberDashboardComponent implements OnInit {
     return this.transactions.filter(t => t.memberId === this.currentUser?.memberId);
   }
 
+  private getReservationsForBook(bookId: number): ReservationRecord[] {
+    return this.reservations
+      .filter(reservation => reservation.bookId === bookId && this.isReservationQueued(reservation))
+      .sort((a, b) => new Date(a.reservationDate).getTime() - new Date(b.reservationDate).getTime());
+  }
+
+  private isReservationQueued(reservation: ReservationRecord): boolean {
+    return reservation.status === 'Active' || reservation.status === 'Ready';
+  }
+
+  private isReservationReady(reservation: ReservationRecord): boolean {
+    if (reservation.status === 'Ready') {
+      return true;
+    }
+
+    if (reservation.status !== 'Active') {
+      return false;
+    }
+
+    const book = this.books.find(bookItem => bookItem.bookId === reservation.bookId);
+    if (!book || book.availableQuantity <= 0) {
+      return false;
+    }
+
+    const queue = this.getReservationsForBook(reservation.bookId);
+    return queue[0]?.reservationId === reservation.reservationId;
+  }
+
   private isOverdue(transaction: TransactionRecord): boolean {
     if (transaction.status === 'Overdue') return true;
     if (!transaction.dueDate) return false;
@@ -184,7 +260,17 @@ export class MemberDashboardComponent implements OnInit {
   }
 
   toggleProfileModal(): void {
+    this.notificationsOpen = false;
     this.profileModalOpen = !this.profileModalOpen;
+  }
+
+  toggleNotifications(): void {
+    this.profileModalOpen = false;
+    this.notificationsOpen = !this.notificationsOpen;
+  }
+
+  closeNotifications(): void {
+    this.notificationsOpen = false;
   }
 
   async saveProfile(): Promise<void> {

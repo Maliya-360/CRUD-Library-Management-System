@@ -25,7 +25,7 @@ namespace LibraryManagementAPI.Services
         {
             var reservations = (await _reservationRepository.GetAllAsync()).ToList();
             var lookup = await BuildLookupAsync();
-            return reservations.Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
+            return OrderReservations(reservations).Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
         }
 
         public async Task<ReservationDto> GetReservationByIdAsync(int id)
@@ -86,8 +86,8 @@ namespace LibraryManagementAPI.Services
         {
             var reservations = (await _reservationRepository.GetAllAsync()).ToList();
             var lookup = await BuildLookupAsync();
-            var active = reservations.Where(r => r.Status == "Active" && r.ReservationExpiryDate > DateTime.Now);
-            return active.Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
+            var active = reservations.Where(r => (r.Status == "Active" || r.Status == "Ready") && r.ReservationExpiryDate > DateTime.Now);
+            return OrderReservations(active).Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
         }
 
         public async Task<IEnumerable<ReservationDto>> GetReservationsByMemberAsync(int memberId)
@@ -95,7 +95,7 @@ namespace LibraryManagementAPI.Services
             var reservations = (await _reservationRepository.GetAllAsync()).ToList();
             var lookup = await BuildLookupAsync();
             var memberReservations = reservations.Where(r => r.MemberId == memberId);
-            return memberReservations.Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
+            return OrderReservations(memberReservations).Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
         }
 
         public async Task<IEnumerable<ReservationDto>> GetReservationsByBookAsync(int bookId)
@@ -103,7 +103,7 @@ namespace LibraryManagementAPI.Services
             var reservations = (await _reservationRepository.GetAllAsync()).ToList();
             var lookup = await BuildLookupAsync();
             var bookReservations = reservations.Where(r => r.BookId == bookId);
-            return bookReservations.Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
+            return OrderReservations(bookReservations).Select(r => MapToDto(r, lookup.books, lookup.members)).ToList();
         }
 
         private async Task<(Dictionary<int, Book> books, Dictionary<int, Member> members)> BuildLookupAsync()
@@ -111,6 +111,26 @@ namespace LibraryManagementAPI.Services
             var books = (await _bookRepository.GetAllAsync()).ToDictionary(book => book.BookId);
             var members = (await _memberRepository.GetAllAsync()).ToDictionary(member => member.MemberId);
             return (books, members);
+        }
+
+        private static IEnumerable<Reservation> OrderReservations(IEnumerable<Reservation> reservations)
+        {
+            return reservations
+                .OrderBy(reservation => reservation.BookId)
+                .ThenBy(reservation => GetStatusPriority(reservation.Status))
+                .ThenBy(reservation => reservation.ReservationDate);
+        }
+
+        private static int GetStatusPriority(string status)
+        {
+            return status switch
+            {
+                "Ready" => 0,
+                "Active" => 1,
+                "Expired" => 2,
+                "Cancelled" => 3,
+                _ => 4
+            };
         }
 
         private ReservationDto MapToDto(Reservation reservation, IReadOnlyDictionary<int, Book> books, IReadOnlyDictionary<int, Member> members)

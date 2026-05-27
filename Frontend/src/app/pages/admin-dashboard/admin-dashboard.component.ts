@@ -101,7 +101,15 @@ export class AdminDashboardComponent implements OnInit {
       this.adminProfile = members.find(m => m.memberId === this.currentUser?.memberId) ?? null;
       this.books = books;
       this.transactions = transactions;
-      this.reservations = reservations;
+      this.reservations = reservations.sort((left, right) => {
+        const bookOrder = left.bookId - right.bookId;
+        if (bookOrder !== 0) return bookOrder;
+
+        const statusOrder = this.getReservationStatusPriority(left.status) - this.getReservationStatusPriority(right.status);
+        if (statusOrder !== 0) return statusOrder;
+
+        return new Date(left.reservationDate).getTime() - new Date(right.reservationDate).getTime();
+      });
       this.totalUsers = this.members.length;
       this.totalBooks = this.books.length;
       this.totalTransactions = this.transactions.length;
@@ -220,6 +228,37 @@ export class AdminDashboardComponent implements OnInit {
 
   get reservationPages(): number {
     return Math.max(1, Math.ceil(this.filteredReservations.length / this.pageSize));
+  }
+
+  get nextInLineReservations(): Array<{ bookId: number; bookTitle: string; memberName: string; reservationDate: string }> {
+    const queueByBook = new Map<number, ReservationRecord[]>();
+
+    this.reservations
+      .filter(reservation => this.isQueueReservation(reservation))
+      .forEach(reservation => {
+        const existing = queueByBook.get(reservation.bookId) ?? [];
+        queueByBook.set(reservation.bookId, [...existing, reservation]);
+      });
+
+    return [...queueByBook.values()]
+      .map(queue => queue.sort((left, right) => new Date(left.reservationDate).getTime() - new Date(right.reservationDate).getTime())[0])
+      .filter((reservation): reservation is ReservationRecord => !!reservation)
+      .map(reservation => ({
+        bookId: reservation.bookId,
+        bookTitle: reservation.bookTitle,
+        memberName: reservation.memberName,
+        reservationDate: reservation.reservationDate
+      }));
+  }
+
+  reservationQueuePosition(reservation: ReservationRecord): number {
+    const queue = this.getQueueForBook(reservation.bookId);
+    const index = queue.findIndex(item => item.reservationId === reservation.reservationId);
+    return index >= 0 ? index + 1 : 0;
+  }
+
+  isNextInLine(reservation: ReservationRecord): boolean {
+    return this.reservationQueuePosition(reservation) === 1;
   }
 
   async registerMember(): Promise<void> {
@@ -408,6 +447,31 @@ export class AdminDashboardComponent implements OnInit {
     if (!value) return 'N/A';
     const d = new Date(value);
     return Number.isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString();
+  }
+
+  private getQueueForBook(bookId: number): ReservationRecord[] {
+    return this.reservations
+      .filter(reservation => reservation.bookId === bookId && this.isQueueReservation(reservation))
+      .sort((left, right) => new Date(left.reservationDate).getTime() - new Date(right.reservationDate).getTime());
+  }
+
+  private isQueueReservation(reservation: ReservationRecord): boolean {
+    return reservation.status === 'Active' || reservation.status === 'Ready';
+  }
+
+  private getReservationStatusPriority(status: string): number {
+    switch (status) {
+      case 'Ready':
+        return 0;
+      case 'Active':
+        return 1;
+      case 'Expired':
+        return 2;
+      case 'Cancelled':
+        return 3;
+      default:
+        return 4;
+    }
   }
 
   toggleProfileModal(): void {
