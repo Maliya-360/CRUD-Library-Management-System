@@ -202,6 +202,28 @@ export class AdminDashboardComponent implements OnInit {
     });
   }
 
+  get overdueTransactions(): TransactionRecord[] {
+    return this.transactions
+      .filter(transaction => this.isOverdue(transaction))
+      .sort((left, right) => this.getComparableDate(left.dueDate) - this.getComparableDate(right.dueDate));
+  }
+
+  get overdueDashboardItems(): Array<{
+    transactionId: number;
+    bookTitle: string;
+    memberName: string;
+    dueDate: string;
+    overdueDays: number;
+  }> {
+    return this.overdueTransactions.map(transaction => ({
+      transactionId: transaction.transactionId,
+      bookTitle: transaction.bookTitle,
+      memberName: transaction.memberName,
+      dueDate: transaction.dueDate,
+      overdueDays: this.getOverdueDays(transaction.dueDate)
+    }));
+  }
+
   get pagedTransactions(): TransactionRecord[] {
     const start = (this.transactionPage - 1) * this.pageSize;
     return this.filteredTransactions.slice(start, start + this.pageSize);
@@ -457,6 +479,34 @@ export class AdminDashboardComponent implements OnInit {
 
   private isQueueReservation(reservation: ReservationRecord): boolean {
     return reservation.status === 'Active' || reservation.status === 'Ready';
+  }
+
+  private isOverdue(transaction: TransactionRecord): boolean {
+    if (transaction.status === 'Returned') return false;
+    if (transaction.status === 'Overdue') return true;
+    if (!transaction.dueDate) return false;
+
+    const dueDate = new Date(transaction.dueDate);
+    if (Number.isNaN(dueDate.getTime())) {
+      return false;
+    }
+
+    dueDate.setHours(23, 59, 59, 999);
+    return dueDate.getTime() < Date.now();
+  }
+
+  private getComparableDate(value: string | null | undefined): number {
+    if (!value) return Number.POSITIVE_INFINITY;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? Number.POSITIVE_INFINITY : date.getTime();
+  }
+
+  private getOverdueDays(dueDateValue: string | null | undefined): number {
+    const dueDate = this.getComparableDate(dueDateValue);
+    if (!Number.isFinite(dueDate)) return 0;
+
+    const elapsed = Date.now() - dueDate;
+    return elapsed > 0 ? Math.max(1, Math.ceil(elapsed / (1000 * 60 * 60 * 24))) : 0;
   }
 
   private getReservationStatusPriority(status: string): number {

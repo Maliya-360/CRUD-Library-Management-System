@@ -56,16 +56,39 @@
   margin: 0;
 }
 
-.queue-overview-card {
+.dashboard-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
   margin-top: 20px;
+  width: 100%;
+  min-height: 0;
+}
+
+.queue-overview-card {
   border: 1px solid rgba(34, 197, 94, 0.18);
   border-radius: 14px;
   background: linear-gradient(135deg, rgba(240, 253, 244, 0.96), rgba(255, 255, 255, 1));
   overflow: hidden;
+  min-width: 0;
 }
 
 .queue-overview-header {
   padding: 16px 20px;
+}
+
+.overdue-overview-card {
+  border-color: rgba(239, 68, 68, 0.18);
+  background: linear-gradient(135deg, rgba(254, 242, 242, 0.96), rgba(255, 255, 255, 1));
+}
+
+.overdue-overview-header {
+  border-bottom-color: rgba(239, 68, 68, 0.12);
+}
+
+.overdue-badge {
+  color: #b91c1c;
+  background: rgba(254, 226, 226, 0.9);
 }
 
 .queue-overview-list {
@@ -83,12 +106,30 @@
 }
 
 .queue-overview-item small {
-  color: #15803d;
   font-weight: 700;
 }
 
 .queue-overview-empty {
   margin: 0 20px 20px;
+}
+
+.overdue-overview-item {
+  border-color: rgba(239, 68, 68, 0.18);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.overdue-overview-item strong,
+.overdue-overview-item span {
+  color: #7f1d1d;
+}
+
+.overdue-overview-item small {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.overdue-overview-empty {
+  border-color: rgba(239, 68, 68, 0.18);
 }
 
 .panel-grid {
@@ -589,6 +630,10 @@
 }
 
 @media (max-width: 1100px) {
+  .dashboard-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
   .panel-grid {
     grid-template-columns: 1fr;
   }

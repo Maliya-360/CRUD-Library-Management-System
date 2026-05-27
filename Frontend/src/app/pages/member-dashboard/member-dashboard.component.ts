@@ -102,7 +102,11 @@ export class MemberDashboardComponent implements OnInit {
   }
 
   get overdueTransactions(): TransactionRecord[] {
-    return this.borrowedTransactions.filter(t => this.isOverdue(t));
+    return this.borrowedTransactions.filter(t => this.isOverdue(t)).sort((left, right) => {
+      const leftDue = this.getComparableDate(left.dueDate);
+      const rightDue = this.getComparableDate(right.dueDate);
+      return leftDue - rightDue;
+    });
   }
 
   get memberReservations(): ReservationRecord[] {
@@ -133,7 +137,7 @@ export class MemberDashboardComponent implements OnInit {
       note: `Due ${this.formatDate(transaction.dueDate)}`
     }));
 
-    return [...availableReservations, ...overdueItems];
+    return [...overdueItems, ...availableReservations];
   }
 
   get overduePreview(): TransactionRecord[] {
@@ -248,9 +252,22 @@ export class MemberDashboardComponent implements OnInit {
   }
 
   private isOverdue(transaction: TransactionRecord): boolean {
+    if (transaction.status === 'Returned') return false;
     if (transaction.status === 'Overdue') return true;
     if (!transaction.dueDate) return false;
-    return new Date(transaction.dueDate).getTime() < Date.now();
+    const dueDate = new Date(transaction.dueDate);
+    if (Number.isNaN(dueDate.getTime())) {
+      return false;
+    }
+
+    dueDate.setHours(23, 59, 59, 999);
+    return dueDate.getTime() < Date.now();
+  }
+
+  private getComparableDate(value: string | null | undefined): number {
+    if (!value) return Number.POSITIVE_INFINITY;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? Number.POSITIVE_INFINITY : date.getTime();
   }
 
   formatDate(value: string | null | undefined): string {

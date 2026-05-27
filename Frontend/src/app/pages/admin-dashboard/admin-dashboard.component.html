@@ -63,26 +63,49 @@
             </div>
           </div>
 
-          <div class="queue-overview-card">
-            <div class="panel-card-header queue-overview-header">
-              <h2>Next in line</h2>
-              <span class="panel-badge">Admin view</span>
-            </div>
-            @if (nextInLineReservations.length) {
-              <div class="queue-summary-list queue-overview-list">
-                @for (queueItem of nextInLineReservations; track queueItem.bookId) {
-                  <div class="queue-summary-item queue-overview-item">
-                    <div>
-                      <strong>{{ queueItem.bookTitle }}</strong>
-                      <span>{{ queueItem.memberName }}</span>
-                    </div>
-                    <small>Reserved {{ formatDate(queueItem.reservationDate) }}</small>
-                  </div>
-                }
+          <div class="dashboard-overview-grid">
+            <div class="queue-overview-card">
+              <div class="panel-card-header queue-overview-header">
+                <h2>Reservations</h2>
               </div>
-            } @else {
-              <div class="empty-state queue-overview-empty">No active queues right now.</div>
-            }
+              @if (nextInLineReservations.length) {
+                <div class="queue-summary-list queue-overview-list">
+                  @for (queueItem of nextInLineReservations; track queueItem.bookId) {
+                    <div class="queue-summary-item queue-overview-item">
+                      <div>
+                        <strong>{{ queueItem.bookTitle }}</strong>
+                        <span>{{ queueItem.memberName }}</span>
+                      </div>
+                      <small>Reserved {{ formatDate(queueItem.reservationDate) }}</small>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="empty-state queue-overview-empty">No active queues right now.</div>
+              }
+            </div>
+
+            <div class="queue-overview-card overdue-overview-card">
+              <div class="panel-card-header queue-overview-header overdue-overview-header">
+                <h2>Overdue books</h2>
+              </div>
+              @if (overdueDashboardItems.length) {
+                <div class="queue-summary-list queue-overview-list overdue-overview-list">
+                  @for (overdueItem of overdueDashboardItems; track overdueItem.transactionId) {
+                    <div class="queue-summary-item queue-overview-item overdue-overview-item">
+                      <div>
+                        <strong>{{ overdueItem.bookTitle }}</strong>
+                        <span>{{ overdueItem.memberName }}</span>
+                        <small>Due {{ formatDate(overdueItem.dueDate) }}</small>
+                      </div>
+                      <small>{{ overdueItem.overdueDays }} day{{ overdueItem.overdueDays === 1 ? '' : 's' }} overdue</small>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="empty-state queue-overview-empty overdue-overview-empty">No overdue books right now.</div>
+              }
+            </div>
           </div>
         </section>
       }
