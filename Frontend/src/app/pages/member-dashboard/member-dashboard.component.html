@@ -18,8 +18,8 @@
           class="notification-btn"
           [class.has-overdue]="hasOverdueNotifications"
           (click)="toggleNotifications()"
-          title="Notifications"
-          aria-label="Notifications"
+          title="Alerts"
+          aria-label="Alerts"
         >
           <span class="notification-icon">🔔</span>
           @if (notificationCount > 0) {
@@ -30,11 +30,10 @@
         @if (notificationsOpen) {
           <div class="notification-popover" (click)="$event.stopPropagation()">
             <div class="notification-popover-head">
-              <div class="notification-popover-title">
-                <p class="notification-kicker">Notifications</p>
-                <h3>Recent alerts</h3>
+              <div class="notification-badge-icon">⚠</div>
+              <div class="notification-popover-title">                <h3>Alerts</h3>
                 <p class="notification-summary">
-                  {{ notificationCount }} update{{ notificationCount === 1 ? '' : 's' }} from your reservations and loans
+                  {{ notificationCount }} item{{ notificationCount === 1 ? '' : 's' }} from your reservations and loans
                 </p>
               </div>
               <button type="button" class="notification-close" (click)="closeNotifications()" aria-label="Close notifications">✕</button>
@@ -50,13 +49,13 @@
                       <small>{{ notification.note }}</small>
                     </div>
                     <span class="notification-pill" [class.overdue]="notification.kind === 'overdue'" [class.available]="notification.kind === 'available'">
-                      {{ notification.kind === 'overdue' ? 'Overdue' : 'Available' }}
+                      {{ notification.kind === 'overdue' ? 'Overdue' : 'Ready' }}
                     </span>
                   </div>
                 }
               </div>
             } @else {
-              <div class="notification-empty">No notifications right now.</div>
+              <div class="notification-empty">No alerts right now.</div>
             }
           </div>
         }

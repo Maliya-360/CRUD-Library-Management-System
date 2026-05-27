@@ -67,7 +67,6 @@ export class MemberDashboardComponent implements OnInit {
       this.memberProfile =
         members.find(m => m.memberId === this.currentUser?.memberId) ?? null;
 
-      // Reset pages whenever fresh data loads
       this.bookPage = 1;
       this.borrowedPage = 1;
       this.overduePage = 1;
