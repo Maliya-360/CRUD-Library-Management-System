@@ -42,6 +42,9 @@ export class MemberDashboardComponent implements OnInit {
   notificationsOpen = false;
   loading = signal(false);
 
+  booksExpanded = false;
+  borrowedExpanded = false;
+  overdueExpanded = false;
 
   profileForm = { firstName: '', lastName: '', email: '' };
   passwordForm = { currentPassword: '', newPassword: '', confirmPassword: '' };

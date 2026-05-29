@@ -97,27 +97,33 @@
           </select>
         </div>
 
-        <div class="panel-list">
-          @if (filteredBooks.length) {
-            @for (book of pagedFilteredBooks; track book.bookId) {
-              <div class="list-row">
-
-                <div class="list-row-main">
-                  <strong>{{ book.title }}</strong>
-                  <span>{{ book.author }}</span>
-                  <small>{{ book.isbn }} · {{ book.category }}</small>
-                </div>
-                <div class="list-row-meta">
-                  <span class="status-badge" [class.active]="book.isAvailable" [class.inactive]="!book.isAvailable">
-                    {{ book.isAvailable ? 'Available' : 'Unavailable' }}
-                  </span>
-                  <small>Qty: {{ book.availableQuantity }}/{{ book.totalQuantity }}</small>
-                </div>
-              </div>
+        <div class="panel-body">
+          <div class="data-list" [class.scroll-expanded]="booksExpanded">
+            @if (filteredBooks.length) {
+              @for (book of (booksExpanded ? filteredBooks : pagedFilteredBooks); track book.bookId) {
+                <article class="data-row">
+                  <div class="data-row-main">
+                    <strong class="data-title">{{ book.title }}</strong>
+                    <span class="data-sub">{{ book.author }}</span>
+                    <small class="data-meta">{{ book.isbn }} · {{ book.category }}</small>
+                  </div>
+                  <div class="data-row-actions">
+                    <span class="status-badge" [class.active]="book.isAvailable" [class.inactive]="!book.isAvailable">
+                      {{ book.isAvailable ? 'Available' : 'Unavailable' }}
+                    </span>
+                    <small>Qty: {{ book.availableQuantity }}/{{ book.totalQuantity }}</small>
+                  </div>
+                </article>
+              }
+            } @else {
+              <div class="empty-state">No books match your search.</div>
             }
-          } @else {
-            <div class="empty-state">No books match your search.</div>
-          }
+          </div>
+          <div class="list-expand-toggle-container">
+            <button type="button" class="list-expand-btn" (click)="booksExpanded = !booksExpanded" [title]="booksExpanded ? 'Collapse List' : 'Expand List'">
+              {{ booksExpanded ? '▲' : '▼' }}
+            </button>
+          </div>
         </div>
 
         <footer class="panel-footer">
@@ -135,24 +141,30 @@
           <h2>Borrowed Books</h2>
           <span class="panel-count">{{ borrowedTransactions.length }} active</span>
         </header>
-        <div class="panel-list panel-list-tall">
-          @if (borrowedTransactions.length) {
-            @for (t of pagedBorrowedTransactions; track t.transactionId) {
-
-              <div class="list-row">
-                <div class="list-row-main">
-                  <strong>{{ t.bookTitle }}</strong>
-                  <span>Due {{ formatDate(t.dueDate) }}</span>
-                  <small>Borrowed {{ formatDate(t.issueDate) }}</small>
-                </div>
-                <div class="list-row-meta">
-                  <span class="status-badge active">Borrowed</span>
-                </div>
-              </div>
+        <div class="panel-body">
+          <div class="data-list" [class.scroll-expanded]="borrowedExpanded">
+            @if (borrowedTransactions.length) {
+              @for (t of (borrowedExpanded ? borrowedTransactions : pagedBorrowedTransactions); track t.transactionId) {
+                <article class="data-row">
+                  <div class="data-row-main">
+                    <strong class="data-title">{{ t.bookTitle }}</strong>
+                    <span class="data-sub">Due {{ formatDate(t.dueDate) }}</span>
+                    <small class="data-meta">Borrowed {{ formatDate(t.issueDate) }}</small>
+                  </div>
+                  <div class="data-row-actions">
+                    <span class="status-badge active">Borrowed</span>
+                  </div>
+                </article>
+              }
+            } @else {
+              <div class="empty-state">You do not have any borrowed books right now.</div>
             }
-          } @else {
-            <div class="empty-state">You do not have any borrowed books right now.</div>
-          }
+          </div>
+          <div class="list-expand-toggle-container">
+            <button type="button" class="list-expand-btn" (click)="borrowedExpanded = !borrowedExpanded" [title]="borrowedExpanded ? 'Collapse List' : 'Expand List'">
+              {{ borrowedExpanded ? '▲' : '▼' }}
+            </button>
+          </div>
         </div>
       </article>
 
@@ -161,24 +173,31 @@
           <h2>Overdue Books</h2>
           <span class="panel-count">{{ overdueTransactions.length }} overdue</span>
         </header>
-        <div class="panel-list panel-list-tall">
-          @if (overdueTransactions.length) {
-            @for (t of pagedOverdueTransactions; track t.transactionId) {
-              <div class="list-row">
-                <div class="list-row-main">
-                  <strong>{{ t.bookTitle }}</strong>
-                  <span>Due {{ formatDate(t.dueDate) }}</span>
-                  <small>This book is overdue. Please return it to avoid extra fine.</small>
-                </div>
-                <div class="list-row-meta">
-                  <span class="status-badge inactive">Overdue</span>
-                  <small>Fine: {{ t.fine || 0 }}</small>
-                </div>
-              </div>
+        <div class="panel-body">
+          <div class="data-list" [class.scroll-expanded]="overdueExpanded">
+            @if (overdueTransactions.length) {
+              @for (t of (overdueExpanded ? overdueTransactions : pagedOverdueTransactions); track t.transactionId) {
+                <article class="data-row">
+                  <div class="data-row-main">
+                    <strong class="data-title">{{ t.bookTitle }}</strong>
+                    <span class="data-sub">Due {{ formatDate(t.dueDate) }}</span>
+                    <small class="data-meta">This book is overdue. Please return it to avoid extra fine.</small>
+                  </div>
+                  <div class="data-row-actions">
+                    <span class="status-badge inactive">Overdue</span>
+                    <small>Fine: {{ t.fine || 0 }}</small>
+                  </div>
+                </article>
+              }
+            } @else {
+              <div class="empty-state">No overdue books at the moment.</div>
             }
-          } @else {
-            <div class="empty-state">No overdue books at the moment.</div>
-          }
+          </div>
+          <div class="list-expand-toggle-container">
+            <button type="button" class="list-expand-btn" (click)="overdueExpanded = !overdueExpanded" [title]="overdueExpanded ? 'Collapse List' : 'Expand List'">
+              {{ overdueExpanded ? '▲' : '▼' }}
+            </button>
+          </div>
         </div>
       </article>
     </section>
